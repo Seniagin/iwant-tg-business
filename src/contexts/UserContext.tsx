@@ -38,18 +38,42 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
   useEffect(() => {
     const initUser = () => {
-      const tgUser = WebApp.initDataUnsafe?.user
-      if (tgUser) {
-        const userData: User = {
-          id: tgUser.id,
-          first_name: tgUser.first_name,
-          last_name: tgUser.last_name,
-          username: tgUser.username,
-          photo_url: tgUser.photo_url,
-          is_premium: tgUser.is_premium,
+      try {
+        const tgUser = WebApp.initDataUnsafe?.user
+        if (tgUser) {
+          const userData: User = {
+            id: tgUser.id,
+            first_name: tgUser.first_name,
+            last_name: tgUser.last_name,
+            username: tgUser.username,
+            photo_url: tgUser.photo_url,
+            is_premium: tgUser.is_premium,
+            activity_description: localStorage.getItem('activity_description') || ''
+          }
+          setUser(userData)
+        } else {
+          // Demo user for non-Telegram environments
+          const demoUser: User = {
+            id: 12345,
+            first_name: 'Demo',
+            last_name: 'User',
+            username: 'demo_user',
+            is_premium: false,
+            activity_description: localStorage.getItem('activity_description') || ''
+          }
+          setUser(demoUser)
+        }
+      } catch (error) {
+        // Demo user for non-Telegram environments
+        const demoUser: User = {
+          id: 12345,
+          first_name: 'Demo',
+          last_name: 'User',
+          username: 'demo_user',
+          is_premium: false,
           activity_description: localStorage.getItem('activity_description') || ''
         }
-        setUser(userData)
+        setUser(demoUser)
       }
       setIsLoading(false)
     }
