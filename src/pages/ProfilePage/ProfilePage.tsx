@@ -25,6 +25,11 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
   }
 
   const handleViewRequests = () => {
+    // @ts-ignore
+    if (window.Telegram?.WebApp?.HapticFeedback) {
+      // @ts-ignore
+      window.Telegram.WebApp.HapticFeedback.impactOccurred('medium')
+    }
     onNavigate('requests')
   }
 

@@ -23,12 +23,26 @@ function App() {
       WebApp.ready()
       WebApp.expand()
       
+      // Set Telegram theme
+      // @ts-ignore
+      document.body.style.backgroundColor = WebApp.backgroundColor
+      // @ts-ignore
+      document.body.style.color = WebApp.textColor
+      
+      // Configure main menu button
+      WebApp.MainButton.setText('View Requests')
+      WebApp.MainButton.show()
+      WebApp.MainButton.onClick(() => {
+        setCurrentPage('requests')
+      })
+      
       // Check if user is authenticated
       const user = WebApp.initDataUnsafe?.user
       console.log('Telegram user:', user)
       if (user) {
         console.log('Setting authenticated to true (Telegram user)')
         setIsAuthenticated(true)
+        setCurrentPage('profile')
       } else {
         console.log('Setting authenticated to true (demo mode)')
         // For demo purposes, simulate authentication
@@ -75,9 +89,6 @@ function App() {
     <UserProvider>
       <RequestsProvider>
         <div className="App">
-          <div style={{ padding: '20px', background: 'red', color: 'white' }}>
-            DEBUG: App is rendering! isAuthenticated: {isAuthenticated.toString()}, Page: {currentPage}
-          </div>
           {renderCurrentPage()}
         </div>
       </RequestsProvider>

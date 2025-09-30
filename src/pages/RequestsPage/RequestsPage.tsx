@@ -17,6 +17,11 @@ const RequestsPage: React.FC<RequestsPageProps> = ({ onNavigate }) => {
   const [activeTab, setActiveTab] = useState<'all' | 'matched'>('all')
 
   const handleBackToProfile = () => {
+    // @ts-ignore
+    if (window.Telegram?.WebApp?.HapticFeedback) {
+      // @ts-ignore
+      window.Telegram.WebApp.HapticFeedback.impactOccurred('light')
+    }
     onNavigate('profile')
   }
 
