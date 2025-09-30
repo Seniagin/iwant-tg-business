@@ -5,6 +5,7 @@ import { MessageCircle } from 'lucide-react'
 import './ProfilePage.css'
 
 const ProfilePage: React.FC = () => {
+  console.log('ProfilePage rendering')
   const navigate = useNavigate()
   const { user, updateActivityDescription } = useUser()
   const [description, setDescription] = useState('')

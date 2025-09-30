@@ -6,6 +6,7 @@ import { useUser } from '../../contexts/UserContext'
 import './LoginPage.css'
 
 const LoginPage: React.FC = () => {
+  console.log('LoginPage rendering')
   const navigate = useNavigate()
   const { user, isLoading } = useUser()
 

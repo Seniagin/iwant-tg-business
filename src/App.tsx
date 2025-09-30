@@ -57,6 +57,9 @@ function App() {
       <RequestsProvider>
         <Router>
           <div className="App">
+            <div style={{ padding: '20px', background: 'red', color: 'white' }}>
+              DEBUG: App is rendering! isAuthenticated: {isAuthenticated.toString()}
+            </div>
             <Routes>
               <Route 
                 path="/login" 
