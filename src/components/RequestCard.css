@@ -1,0 +1,121 @@
+.request-card {
+  background-color: var(--tg-theme-secondary-bg-color, #f8f9fa);
+  border-radius: 16px;
+  padding: 20px;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.request-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.request-card.matched {
+  border-color: var(--tg-theme-button-color, #2481cc);
+  background-color: rgba(36, 129, 204, 0.05);
+}
+
+.request-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.request-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--tg-theme-text-color, #000000);
+  margin: 0;
+  flex: 1;
+  margin-right: 12px;
+}
+
+.matched-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background-color: var(--tg-theme-button-color, #2481cc);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.request-description {
+  color: var(--tg-theme-text-color, #000000);
+  line-height: 1.6;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.request-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--tg-theme-hint-color, #666666);
+  font-size: 14px;
+}
+
+.detail-item .category {
+  background-color: var(--tg-theme-button-color, #2481cc);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.request-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+}
+
+.contact-info {
+  flex: 1;
+  font-size: 14px;
+  color: var(--tg-theme-text-color, #000000);
+}
+
+.match-button {
+  background-color: var(--tg-theme-button-color, #2481cc);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.match-button:hover {
+  background-color: #1a6bb8;
+  transform: scale(1.05);
+}
+
+@media (max-width: 480px) {
+  .request-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .match-button {
+    align-self: center;
+  }
+}
