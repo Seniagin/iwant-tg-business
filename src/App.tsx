@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 // @ts-ignore
 import WebApp from '@twa-dev/sdk'
 import { UserProvider } from './contexts/UserContext'
@@ -9,9 +8,12 @@ import ProfilePage from './pages/ProfilePage/ProfilePage'
 import RequestsPage from './pages/RequestsPage/RequestsPage'
 import LoadingSpinner from './components/LoadingSpinner'
 
+type AppPage = 'login' | 'profile' | 'requests'
+
 function App() {
   const [isLoading, setIsLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [currentPage, setCurrentPage] = useState<AppPage>('login')
 
   useEffect(() => {
     console.log('App initializing...')
@@ -31,12 +33,14 @@ function App() {
         console.log('Setting authenticated to true (demo mode)')
         // For demo purposes, simulate authentication
         setIsAuthenticated(true)
+        setCurrentPage('profile')
       }
     } catch (error) {
       console.log('Not running in Telegram environment, using demo mode', error)
       console.log('Setting authenticated to true (demo mode - catch)')
       // For demo purposes, simulate authentication
       setIsAuthenticated(true)
+      setCurrentPage('profile')
     }
     
     console.log('Setting loading to false')
@@ -44,42 +48,38 @@ function App() {
     console.log('App initialization complete')
   }, [])
 
-  console.log('App render - isLoading:', isLoading, 'isAuthenticated:', isAuthenticated)
+  console.log('App render - isLoading:', isLoading, 'isAuthenticated:', isAuthenticated, 'currentPage:', currentPage)
 
   if (isLoading) {
     console.log('Rendering LoadingSpinner')
     return <LoadingSpinner />
   }
 
+  const renderCurrentPage = () => {
+    if (!isAuthenticated) {
+      return <LoginPage onLogin={() => setCurrentPage('profile')} />
+    }
+
+    switch (currentPage) {
+      case 'profile':
+        return <ProfilePage onNavigate={setCurrentPage} />
+      case 'requests':
+        return <RequestsPage onNavigate={setCurrentPage} />
+      default:
+        return <LoginPage onLogin={() => setCurrentPage('profile')} />
+    }
+  }
+
   console.log('Rendering main app content')
   return (
     <UserProvider>
       <RequestsProvider>
-        <Router>
-          <div className="App">
-            <div style={{ padding: '20px', background: 'red', color: 'white' }}>
-              DEBUG: App is rendering! isAuthenticated: {isAuthenticated.toString()}
-            </div>
-            <Routes>
-              <Route 
-                path="/login" 
-                element={isAuthenticated ? <Navigate to="/profile" /> : <LoginPage />} 
-              />
-              <Route 
-                path="/profile" 
-                element={isAuthenticated ? <ProfilePage /> : <Navigate to="/login" />} 
-              />
-              <Route 
-                path="/requests" 
-                element={isAuthenticated ? <RequestsPage /> : <Navigate to="/login" />} 
-              />
-              <Route 
-                path="/" 
-                element={<Navigate to={isAuthenticated ? "/profile" : "/login"} />} 
-              />
-            </Routes>
+        <div className="App">
+          <div style={{ padding: '20px', background: 'red', color: 'white' }}>
+            DEBUG: App is rendering! isAuthenticated: {isAuthenticated.toString()}, Page: {currentPage}
           </div>
-        </Router>
+          {renderCurrentPage()}
+        </div>
       </RequestsProvider>
     </UserProvider>
   )

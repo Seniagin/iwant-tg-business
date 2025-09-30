@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useUser } from '../../contexts/UserContext'
 import { MessageCircle } from 'lucide-react'
 import './ProfilePage.css'
 
-const ProfilePage: React.FC = () => {
+interface ProfilePageProps {
+  onNavigate: (page: 'login' | 'profile' | 'requests') => void
+}
+
+const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
   console.log('ProfilePage rendering')
-  const navigate = useNavigate()
   const { user, updateActivityDescription } = useUser()
   const [description, setDescription] = useState('')
   const [isEditing, setIsEditing] = useState(false)
@@ -23,7 +25,7 @@ const ProfilePage: React.FC = () => {
   }
 
   const handleViewRequests = () => {
-    navigate('/requests')
+    onNavigate('requests')
   }
 
   if (!user) {

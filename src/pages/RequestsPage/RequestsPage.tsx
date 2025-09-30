@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useUser } from '../../contexts/UserContext'
 import { useRequests } from '../../contexts/RequestsContext'
 import { ArrowLeft, MessageCircle, Plus } from 'lucide-react'
@@ -7,15 +6,18 @@ import RequestCard from '../../components/RequestCard'
 import AddRequestModal from '../../components/AddRequestModal'
 import './RequestsPage.css'
 
-const RequestsPage: React.FC = () => {
-  const navigate = useNavigate()
+interface RequestsPageProps {
+  onNavigate: (page: 'login' | 'profile' | 'requests') => void
+}
+
+const RequestsPage: React.FC<RequestsPageProps> = ({ onNavigate }) => {
   const { user } = useUser()
   const { requests, matchedRequests, addRequest, markAsMatched, isLoading } = useRequests()
   const [showAddModal, setShowAddModal] = useState(false)
   const [activeTab, setActiveTab] = useState<'all' | 'matched'>('all')
 
   const handleBackToProfile = () => {
-    navigate('/profile')
+    onNavigate('profile')
   }
 
   const handleAddRequest = () => {

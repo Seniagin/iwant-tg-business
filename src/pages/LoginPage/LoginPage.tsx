@@ -1,25 +1,21 @@
-import React, { useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React from 'react'
 // @ts-ignore
 import WebApp from '@twa-dev/sdk'
 import { useUser } from '../../contexts/UserContext'
 import './LoginPage.css'
 
-const LoginPage: React.FC = () => {
-  console.log('LoginPage rendering')
-  const navigate = useNavigate()
-  const { user, isLoading } = useUser()
+interface LoginPageProps {
+  onLogin: () => void
+}
 
-  useEffect(() => {
-    if (user && !isLoading) {
-      navigate('/profile')
-    }
-  }, [user, isLoading, navigate])
+const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
+  console.log('LoginPage rendering')
+  const { isLoading } = useUser()
 
   const handleLogin = () => {
     // In a real app, you would validate the user data
     // For now, we'll just navigate to the profile page
-    navigate('/profile')
+    onLogin()
   }
 
   // Demo mode - show login button even if not in Telegram
