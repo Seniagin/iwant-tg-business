@@ -14,6 +14,8 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   useEffect(() => {
+    console.log('App initializing...')
+    
     // Initialize Telegram WebApp
     try {
       WebApp.ready()
@@ -21,15 +23,17 @@ function App() {
       
       // Check if user is authenticated
       const user = WebApp.initDataUnsafe?.user
+      console.log('Telegram user:', user)
       if (user) {
         setIsAuthenticated(true)
       }
     } catch (error) {
-      console.log('Not running in Telegram environment, using demo mode')
+      console.log('Not running in Telegram environment, using demo mode', error)
       // For demo purposes, simulate authentication
       setIsAuthenticated(true)
     }
     
+    console.log('App initialized, isAuthenticated:', isAuthenticated)
     setIsLoading(false)
   }, [])
 
