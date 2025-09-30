@@ -26,6 +26,9 @@ function App() {
       console.log('Telegram user:', user)
       if (user) {
         setIsAuthenticated(true)
+      } else {
+        // For demo purposes, simulate authentication
+        setIsAuthenticated(true)
       }
     } catch (error) {
       console.log('Not running in Telegram environment, using demo mode', error)
@@ -33,7 +36,6 @@ function App() {
       setIsAuthenticated(true)
     }
     
-    console.log('App initialized, isAuthenticated:', isAuthenticated)
     setIsLoading(false)
   }, [])
 
