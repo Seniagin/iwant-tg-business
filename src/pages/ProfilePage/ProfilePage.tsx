@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUser } from '../../contexts/UserContext'
-import { User, MessageCircle, Settings } from 'lucide-react'
+import { MessageCircle } from 'lucide-react'
 import './ProfilePage.css'
 
 const ProfilePage: React.FC = () => {
