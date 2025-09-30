@@ -25,24 +25,33 @@ function App() {
       const user = WebApp.initDataUnsafe?.user
       console.log('Telegram user:', user)
       if (user) {
+        console.log('Setting authenticated to true (Telegram user)')
         setIsAuthenticated(true)
       } else {
+        console.log('Setting authenticated to true (demo mode)')
         // For demo purposes, simulate authentication
         setIsAuthenticated(true)
       }
     } catch (error) {
       console.log('Not running in Telegram environment, using demo mode', error)
+      console.log('Setting authenticated to true (demo mode - catch)')
       // For demo purposes, simulate authentication
       setIsAuthenticated(true)
     }
     
+    console.log('Setting loading to false')
     setIsLoading(false)
+    console.log('App initialization complete')
   }, [])
 
+  console.log('App render - isLoading:', isLoading, 'isAuthenticated:', isAuthenticated)
+
   if (isLoading) {
+    console.log('Rendering LoadingSpinner')
     return <LoadingSpinner />
   }
 
+  console.log('Rendering main app content')
   return (
     <UserProvider>
       <RequestsProvider>
