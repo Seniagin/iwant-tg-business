@@ -33,13 +33,16 @@ interface UserProviderProps {
 }
 
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
+  console.log('UserProvider rendering')
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
+    console.log('UserProvider useEffect running')
     const initUser = () => {
       try {
         const tgUser = WebApp.initDataUnsafe?.user
+        console.log('Telegram user in UserProvider:', tgUser)
         if (tgUser) {
           const userData: User = {
             id: tgUser.id,
@@ -50,6 +53,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
             is_premium: tgUser.is_premium,
             activity_description: localStorage.getItem('activity_description') || ''
           }
+          console.log('Setting Telegram user:', userData)
           setUser(userData)
         } else {
           // Demo user for non-Telegram environments
@@ -61,9 +65,11 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
             is_premium: false,
             activity_description: localStorage.getItem('activity_description') || ''
           }
+          console.log('Setting demo user:', demoUser)
           setUser(demoUser)
         }
       } catch (error) {
+        console.log('Error in UserProvider, setting demo user:', error)
         // Demo user for non-Telegram environments
         const demoUser: User = {
           id: 12345,
@@ -75,6 +81,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         }
         setUser(demoUser)
       }
+      console.log('Setting UserProvider loading to false')
       setIsLoading(false)
     }
 
