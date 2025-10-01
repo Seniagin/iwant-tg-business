@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 // @ts-ignore
 import WebApp from '@twa-dev/sdk'
+import { authService } from '../services/api'
 
 export interface User {
   id: number
@@ -16,6 +17,7 @@ interface UserContextType {
   user: User | null
   updateActivityDescription: (description: string) => void
   isLoading: boolean
+  authToken: string | null
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined)
@@ -36,70 +38,94 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   console.log('UserProvider rendering')
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [authToken, setAuthToken] = useState<string | null>(null)
 
   useEffect(() => {
     console.log('UserProvider useEffect running')
-    const initUser = () => {
+    const initUser = async () => {
       try {
-        const tgUser = WebApp.initDataUnsafe?.user
-        console.log('Telegram user in UserProvider:', tgUser)
-        if (tgUser) {
-          const userData: User = {
-            id: tgUser.id,
-            first_name: tgUser.first_name,
-            last_name: tgUser.last_name,
-            username: tgUser.username,
-            photo_url: tgUser.photo_url,
-            is_premium: tgUser.is_premium,
-            activity_description: localStorage.getItem('activity_description') || ''
+        // Check if we have a stored token
+        const storedToken = localStorage.getItem('auth_token')
+        if (storedToken) {
+          setAuthToken(storedToken)
+          // Try to get user profile with stored token
+          try {
+            const profile = await authService.getUserProfile(storedToken)
+            setUser(profile.user)
+            setIsLoading(false)
+            return
+          } catch (error) {
+            console.log('Stored token invalid, clearing...')
+            localStorage.removeItem('auth_token')
           }
-          console.log('Setting Telegram user:', userData)
-          setUser(userData)
+        }
+
+        // Try Telegram authentication
+        const initData = WebApp.initData
+        if (initData) {
+          console.log('Attempting Telegram authentication...')
+          const authResult = await authService.verifyTelegramAuth(initData)
+          
+          if (authResult.success && authResult.user && authResult.token) {
+            console.log('Telegram authentication successful:', authResult.user)
+            setUser(authResult.user)
+            setAuthToken(authResult.token)
+            localStorage.setItem('auth_token', authResult.token)
+          } else {
+            console.log('Telegram authentication failed:', authResult.error)
+            // Fall back to demo mode
+            setDemoUser()
+          }
         } else {
-          // Demo user for non-Telegram environments
-          const demoUser: User = {
-            id: 12345,
-            first_name: 'Demo',
-            last_name: 'User',
-            username: 'demo_user',
-            is_premium: false,
-            activity_description: localStorage.getItem('activity_description') || ''
-          }
-          console.log('Setting demo user:', demoUser)
-          setUser(demoUser)
+          console.log('No Telegram initData, using demo mode')
+          setDemoUser()
         }
       } catch (error) {
-        console.log('Error in UserProvider, setting demo user:', error)
-        // Demo user for non-Telegram environments
-        const demoUser: User = {
-          id: 12345,
-          first_name: 'Demo',
-          last_name: 'User',
-          username: 'demo_user',
-          is_premium: false,
-          activity_description: localStorage.getItem('activity_description') || ''
-        }
-        setUser(demoUser)
+        console.log('Error in UserProvider, using demo mode:', error)
+        setDemoUser()
       }
-      console.log('Setting UserProvider loading to false')
+      
       setIsLoading(false)
+    }
+
+    const setDemoUser = () => {
+      const demoUser: User = {
+        id: 12345,
+        first_name: 'Demo',
+        last_name: 'User',
+        username: 'demo_user',
+        is_premium: false,
+        activity_description: localStorage.getItem('activity_description') || ''
+      }
+      console.log('Setting demo user:', demoUser)
+      setUser(demoUser)
     }
 
     initUser()
   }, [])
 
-  const updateActivityDescription = (description: string) => {
+  const updateActivityDescription = async (description: string) => {
     if (user) {
       const updatedUser = { ...user, activity_description: description }
       setUser(updatedUser)
       localStorage.setItem('activity_description', description)
+      
+      // Update on backend if we have a token
+      if (authToken) {
+        try {
+          await authService.updateActivityDescription(authToken, description)
+        } catch (error) {
+          console.error('Failed to update activity description on backend:', error)
+        }
+      }
     }
   }
 
   const value = {
     user,
     updateActivityDescription,
-    isLoading
+    isLoading,
+    authToken
   }
 
   return (
