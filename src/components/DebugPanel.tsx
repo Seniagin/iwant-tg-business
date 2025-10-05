@@ -26,7 +26,8 @@ const DebugPanel: React.FC<DebugPanelProps> = ({ isVisible, onClose }) => {
       auth_token: localStorage.getItem('auth_token'),
       activity_description: localStorage.getItem('activity_description')
     },
-    apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'Not set'
+    apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'Not set',
+    allEnvVars: import.meta.env
   }
 
   const copyToClipboard = async () => {
@@ -54,6 +55,7 @@ const DebugPanel: React.FC<DebugPanelProps> = ({ isVisible, onClose }) => {
           <p><strong>User Agent:</strong> {debugInfo.userAgent}</p>
           <p><strong>Is Telegram:</strong> {debugInfo.isTelegram ? 'Yes' : 'No'}</p>
           <p><strong>API Base URL:</strong> {debugInfo.apiBaseUrl}</p>
+          <p><strong>All Env Vars:</strong> {JSON.stringify(debugInfo.allEnvVars, null, 2)}</p>
         </div>
 
         <div className="debug-section">
