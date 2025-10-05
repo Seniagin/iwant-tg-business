@@ -10,6 +10,17 @@ export interface TelegramUser {
   is_premium?: boolean
 }
 
+export interface TelegramAuthDto {
+  id: number
+  first_name: string
+  last_name?: string
+  username?: string
+  language_code?: string
+  photo_url?: string
+  auth_date: string
+  hash: string
+}
+
 export interface AuthResponse {
   success: boolean
   user?: TelegramUser
@@ -18,22 +29,63 @@ export interface AuthResponse {
 }
 
 export const authService = {
-  // Send Telegram initData to backend for verification
+  // Send Telegram user data to backend for authentication
   async verifyTelegramAuth(initData: string): Promise<AuthResponse> {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/telegram`, {
+      // Extract user data from initData
+      const urlParams = new URLSearchParams(initData);
+      const userParam = urlParams.get('user');
+      const authDate = urlParams.get('auth_date');
+      const hash = urlParams.get('hash');
+      
+      if (!userParam || !authDate || !hash) {
+        return {
+          success: false,
+          error: 'Missing required Telegram data'
+        };
+      }
+
+      const user = JSON.parse(decodeURIComponent(userParam));
+      
+      // Prepare data according to your DTO
+      const telegramAuthData: TelegramAuthDto = {
+        id: user.id,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        username: user.username,
+        language_code: user.language_code,
+        photo_url: user.photo_url,
+        auth_date: authDate,
+        hash: hash
+      };
+
+      const response = await fetch(`${API_BASE_URL}/business-client/telegram-auth`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ initData }),
+        body: JSON.stringify(telegramAuthData),
       })
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
-      return await response.json()
+      const result = await response.json()
+      
+      // Transform backend response to match frontend expectations
+      return {
+        success: true,
+        user: {
+          id: result.user?.id || user.id,
+          first_name: result.user?.first_name || user.first_name,
+          last_name: result.user?.last_name || user.last_name,
+          username: result.user?.username || user.username,
+          photo_url: result.user?.photo_url || user.photo_url,
+          is_premium: result.user?.is_premium || user.is_premium
+        },
+        token: result.token
+      }
     } catch (error) {
       console.error('Telegram auth verification failed:', error)
       return {
