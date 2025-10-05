@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { authService } from '../services/api'
 
 export interface CustomerRequest {
   id: string
@@ -52,17 +53,19 @@ export const RequestsProvider: React.FC<RequestsProviderProps> = ({ children }) 
     setIsLoading(false)
   }, [])
 
-  const addRequest = (requestData: Omit<CustomerRequest, 'id' | 'created_at' | 'is_matched'>) => {
-    const newRequest: CustomerRequest = {
-      ...requestData,
-      id: Date.now().toString(),
-      created_at: new Date().toISOString(),
-      is_matched: false
+  const addRequest = async (requestData: Omit<CustomerRequest, 'id' | 'created_at' | 'is_matched'>) => {
+    try {
+      const result = await authService.addRequest(requestData)
+      if (result.success) {
+        // Reload requests from localStorage
+        const savedRequests = localStorage.getItem('customer_requests')
+        if (savedRequests) {
+          setRequests(JSON.parse(savedRequests))
+        }
+      }
+    } catch (error) {
+      console.error('Failed to add request:', error)
     }
-    
-    const updatedRequests = [...requests, newRequest]
-    setRequests(updatedRequests)
-    localStorage.setItem('customer_requests', JSON.stringify(updatedRequests))
   }
 
   const markAsMatched = (requestId: string) => {

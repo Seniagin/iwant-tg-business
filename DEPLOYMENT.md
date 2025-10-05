@@ -1,98 +1,23 @@
 # Deployment Guide
 
-## 🚀 GitHub Actions Setup
+## 🚀 Frontend-Only Telegram Mini App
 
-### 1. Frontend Deployment (GitHub Pages)
-
-The frontend automatically deploys to GitHub Pages when you push to the `master` branch.
-
-**Required GitHub Secrets:**
-- `VITE_API_BASE_URL` - Your backend API URL (e.g., `https://your-backend.railway.app/api`)
-
-**Setup:**
-1. Go to your repository → Settings → Secrets and variables → Actions
-2. Add new repository secret:
-   - Name: `VITE_API_BASE_URL`
-   - Value: `https://your-backend-domain.com/api`
-
-### 2. Backend Deployment (Railway)
-
-**Required GitHub Secrets:**
-- `RAILWAY_TOKEN` - Your Railway authentication token
-
-**Setup:**
-1. Go to [Railway](https://railway.app) and create an account
-2. Create a new project
-3. Go to your project → Settings → Tokens
-4. Generate a new token
-5. Add to GitHub Secrets:
-   - Name: `RAILWAY_TOKEN`
-   - Value: `your_railway_token`
-
-**Backend Environment Variables (set in Railway dashboard):**
-- `BOT_TOKEN` - Your Telegram bot token
-- `JWT_SECRET` - A strong random string
-- `PORT` - Railway will set this automatically
-
-### 3. Alternative Backend Deployments
-
-#### Heroku
-```bash
-# Install Heroku CLI
-npm install -g heroku
-
-# Login and create app
-heroku login
-heroku create iwant-backend
-
-# Set environment variables
-heroku config:set BOT_TOKEN=your_bot_token
-heroku config:set JWT_SECRET=your_jwt_secret
-
-# Deploy
-git subtree push --prefix=backend heroku main
-```
-
-#### DigitalOcean App Platform
-1. Connect your GitHub repository
-2. Set build command: `cd backend && npm install`
-3. Set run command: `cd backend && npm start`
-4. Add environment variables in the dashboard
+This is a pure frontend Telegram Mini App that uses localStorage for data persistence. No backend required!
 
 ## 🔧 Local Development
 
-### Frontend
 ```bash
 # Install dependencies
 npm install
 
-# Create environment file
-cp env.example .env.local
-
-# Edit .env.local with your settings
-# VITE_API_BASE_URL=http://localhost:3001/api
-
 # Start development server
 npm run dev
-```
 
-### Backend
-```bash
-# Navigate to backend directory
-cd backend
+# Build for production
+npm run build
 
-# Install dependencies
-npm install
-
-# Create environment file
-cp env.example .env
-
-# Edit .env with your settings
-# BOT_TOKEN=your_bot_token_from_botfather
-# JWT_SECRET=your_super_secret_jwt_key_here
-
-# Start development server
-npm run dev
+# Preview production build
+npm run preview
 ```
 
 ## 📱 Telegram Bot Setup
@@ -111,31 +36,52 @@ npm run dev
    https://seniagin.github.io/iwant-tg-business
    ```
 
-3. **Set Environment Variables:**
-   - Add `BOT_TOKEN` to your backend environment
-   - Update `VITE_API_BASE_URL` to point to your deployed backend
+## 🚀 GitHub Pages Deployment
+
+The app automatically deploys to GitHub Pages when you push to the `master` branch.
+
+**Setup:**
+1. Go to your repository → Settings → Pages
+2. Source: Deploy from a branch
+3. Branch: `gh-pages`
+4. Folder: `/ (root)`
 
 ## 🔄 CI/CD Pipeline
 
 The GitHub Actions will:
-- ✅ Run tests and linting on every push
-- ✅ Build frontend with correct environment variables
-- ✅ Deploy frontend to GitHub Pages
-- ✅ Deploy backend to Railway (when backend files change)
+- ✅ Run linting on every push
+- ✅ Build frontend
+- ✅ Deploy to GitHub Pages automatically
+
+## 💾 Data Storage
+
+This app uses localStorage for data persistence:
+- **User data**: Stored in `user_data` key
+- **Activity description**: Stored in `activity_description` key  
+- **Customer requests**: Stored in `customer_requests` key
+
+## 🎯 Features
+
+- ✅ **Telegram Authentication**: Extracts user data from Telegram WebApp
+- ✅ **Profile Management**: Users can describe their activities
+- ✅ **Request Management**: Add and view customer requests
+- ✅ **Local Storage**: All data persists in browser
+- ✅ **Responsive Design**: Works on mobile and desktop
+- ✅ **GitHub Pages**: Easy deployment and hosting
 
 ## 🐛 Troubleshooting
 
 ### Frontend Issues
-- Check that `VITE_API_BASE_URL` is set correctly
-- Verify the backend is running and accessible
-- Check browser console for API errors
-
-### Backend Issues
-- Verify `BOT_TOKEN` is set correctly
-- Check Railway logs for errors
-- Test the health endpoint: `https://your-backend.railway.app/api/health`
+- Check browser console for errors
+- Clear localStorage if data seems corrupted
+- Verify the app is accessible at the GitHub Pages URL
 
 ### Telegram Issues
-- Ensure bot token is correct
-- Verify Mini App URL is accessible
-- Check that backend can verify Telegram signatures
+- Ensure Mini App URL is accessible
+- Check that the bot is properly configured
+- Verify the app works in Telegram's WebView
+
+### Data Issues
+- Data is stored locally in browser
+- Clearing browser data will reset the app
+- Each user's data is isolated to their browser
