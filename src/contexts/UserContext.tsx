@@ -17,6 +17,7 @@ interface UserContextType {
   user: User | null
   updateActivityDescription: (description: string) => void
   isLoading: boolean
+  authToken: string | null
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined)
@@ -37,19 +38,26 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   console.log('UserProvider rendering')
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [authToken, setAuthToken] = useState<string | null>(null)
 
   useEffect(() => {
     console.log('UserProvider useEffect running')
     const initUser = async () => {
       try {
-        // Check if we have stored user data
-        const storedUserData = localStorage.getItem('user_data')
-        if (storedUserData) {
-          const user = JSON.parse(storedUserData)
-          console.log('Loading stored user:', user)
-          setUser(user)
-          setIsLoading(false)
-          return
+        // Check if we have a stored token
+        const storedToken = localStorage.getItem('auth_token')
+        if (storedToken) {
+          setAuthToken(storedToken)
+          // Try to get user profile with stored token
+          try {
+            const profile = await authService.getUserProfile(storedToken)
+            setUser(profile.user)
+            setIsLoading(false)
+            return
+          } catch (error) {
+            console.log('Stored token invalid, clearing...')
+            localStorage.removeItem('auth_token')
+          }
         }
 
         // Try Telegram authentication
@@ -58,14 +66,11 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
           console.log('Attempting Telegram authentication...')
           const authResult = await authService.verifyTelegramAuth(initData)
           
-          if (authResult.success && authResult.user) {
+          if (authResult.success && authResult.user && authResult.token) {
             console.log('Telegram authentication successful:', authResult.user)
-            const userWithDescription = {
-              ...authResult.user,
-              activity_description: localStorage.getItem('activity_description') || ''
-            }
-            setUser(userWithDescription)
-            localStorage.setItem('user_data', JSON.stringify(userWithDescription))
+            setUser(authResult.user)
+            setAuthToken(authResult.token)
+            localStorage.setItem('auth_token', authResult.token)
           } else {
             console.log('Telegram authentication failed:', authResult.error)
             // Fall back to demo mode
@@ -94,7 +99,6 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       }
       console.log('Setting demo user:', demoUser)
       setUser(demoUser)
-      localStorage.setItem('user_data', JSON.stringify(demoUser))
     }
 
     initUser()
@@ -105,13 +109,14 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       const updatedUser = { ...user, activity_description: description }
       setUser(updatedUser)
       localStorage.setItem('activity_description', description)
-      localStorage.setItem('user_data', JSON.stringify(updatedUser))
       
-      // Update in localStorage
-      try {
-        await authService.updateActivityDescription(description)
-      } catch (error) {
-        console.error('Failed to update activity description:', error)
+      // Update on backend if we have a token
+      if (authToken) {
+        try {
+          await authService.updateActivityDescription(authToken, description)
+        } catch (error) {
+          console.error('Failed to update activity description on backend:', error)
+        }
       }
     }
   }
@@ -119,7 +124,8 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const value = {
     user,
     updateActivityDescription,
-    isLoading
+    isLoading,
+    authToken
   }
 
   return (

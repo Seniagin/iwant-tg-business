@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { authService } from '../services/api'
+import { useUser } from './UserContext'
 
 export interface CustomerRequest {
   id: string
@@ -55,13 +56,20 @@ export const RequestsProvider: React.FC<RequestsProviderProps> = ({ children }) 
 
   const addRequest = async (requestData: Omit<CustomerRequest, 'id' | 'created_at' | 'is_matched'>) => {
     try {
-      const result = await authService.addRequest(requestData)
-      if (result.success) {
-        // Reload requests from localStorage
-        const savedRequests = localStorage.getItem('customer_requests')
-        if (savedRequests) {
-          setRequests(JSON.parse(savedRequests))
+      // Get auth token from UserContext
+      const { authToken } = useUser()
+      
+      if (authToken) {
+        const result = await authService.addRequest(authToken, requestData)
+        if (result.success) {
+          // Reload requests from backend
+          const requestsResult = await authService.getRequests(authToken)
+          if (requestsResult.success) {
+            setRequests(requestsResult.requests)
+          }
         }
+      } else {
+        console.error('No auth token available')
       }
     } catch (error) {
       console.error('Failed to add request:', error)
