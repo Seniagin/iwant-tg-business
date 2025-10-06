@@ -79,7 +79,7 @@ export const authService = {
 
       console.log('🔐 Sending auth data to backend:', telegramAuthData)
 
-      const response = await fetch(`${API_BASE_URL}/business-client/telegram-auth`, {
+      const response = await fetch(`${API_BASE_URL}/business-client/telegram-auth-sdk`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
