@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
-// @ts-ignore
-import WebApp from '@twa-dev/sdk'
+import { telegramAuth } from './services/telegramAuth'
 import { UserProvider } from './contexts/UserContext'
 import { RequestsProvider } from './contexts/RequestsContext'
 import LoginPage from './pages/LoginPage/LoginPage'
@@ -20,52 +19,52 @@ function App() {
   useEffect(() => {
     console.log('🚀 App initializing...')
     console.log('🌐 User Agent:', navigator.userAgent)
-    console.log('📱 Is Telegram WebApp:', !!window.Telegram?.WebApp)
+    console.log('📱 Is Telegram WebApp available:', telegramAuth.isAvailable())
 
     // Initialize Telegram WebApp
     try {
-      WebApp.ready()
-      WebApp.expand()
+      if (telegramAuth.isAvailable()) {
+        // Set Telegram theme
+        const theme = telegramAuth.getTheme()
+        if (theme) {
+          document.body.style.backgroundColor = theme.background_color
+          document.body.style.color = theme.text_color
+        }
 
-      // Set Telegram theme
-      // @ts-ignore
-      document.body.style.backgroundColor = WebApp.backgroundColor
-      // @ts-ignore
-      document.body.style.color = WebApp.textColor || '#000000'
+        // Configure main menu button
+        telegramAuth.setMainButton('View Requests', () => {
+          console.log('📱 Main button clicked')
+          setCurrentPage('requests')
+        })
 
-      // Configure main menu button
-      WebApp.MainButton.setText('View Requests')
-      WebApp.MainButton.show()
-      WebApp.MainButton.onClick(() => {
-        console.log('📱 Main button clicked')
-        setCurrentPage('requests')
-      })
+        // Debug Telegram data
+        console.log('📊 Telegram initData:', telegramAuth.getInitData())
+        console.log('👤 Telegram initDataUnsafe:', telegramAuth.getInitDataUnsafe())
+        console.log('🎨 Telegram theme:', theme)
+        console.log('🎨 Color scheme:', telegramAuth.getColorScheme())
 
-      // Debug Telegram data
-      console.log('📊 Telegram initData:', WebApp.initData)
-      console.log('👤 Telegram initDataUnsafe:', WebApp.initDataUnsafe)
-      console.log('🎨 Telegram theme:', {
-        backgroundColor: WebApp.backgroundColor,
-        // @ts-ignore
-        textColor: WebApp.textColor,
-        themeParams: WebApp.themeParams
-      })
-
-      // Check if user is authenticated
-      const user = WebApp.initDataUnsafe?.user
-      console.log('👤 Telegram user:', user)
-      if (user) {
-        console.log('✅ Setting authenticated to true (Telegram user)')
-        setIsAuthenticated(true)
-        setCurrentPage('profile')
+        // Check if user is authenticated
+        const user = telegramAuth.getUser()
+        console.log('👤 Telegram user:', user)
+        if (user) {
+          console.log('✅ Setting authenticated to true (Telegram user)')
+          setIsAuthenticated(true)
+          setCurrentPage('profile')
+        } else {
+          console.log('⚠️ Setting authenticated to true (demo mode)')
+          // For demo purposes, simulate authentication
+          setIsAuthenticated(true)
+          setCurrentPage('profile')
+        }
       } else {
-        console.log('⚠️ Setting authenticated to true (demo mode)')
+        console.log('❌ Not running in Telegram environment, using demo mode')
+        console.log('⚠️ Setting authenticated to true (demo mode - catch)')
         // For demo purposes, simulate authentication
         setIsAuthenticated(true)
         setCurrentPage('profile')
       }
     } catch (error) {
-      console.log('❌ Not running in Telegram environment, using demo mode', error)
+      console.log('❌ Error during initialization, using demo mode', error)
       console.log('⚠️ Setting authenticated to true (demo mode - catch)')
       // For demo purposes, simulate authentication
       setIsAuthenticated(true)

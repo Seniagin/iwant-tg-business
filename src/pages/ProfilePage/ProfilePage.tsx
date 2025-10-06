@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useUser } from '../../contexts/UserContext'
+import { telegramAuth } from '../../services/telegramAuth'
 import { MessageCircle } from 'lucide-react'
 import './ProfilePage.css'
 
@@ -25,11 +26,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
   }
 
   const handleViewRequests = () => {
-    // @ts-ignore
-    if (window.Telegram?.WebApp?.HapticFeedback) {
-      // @ts-ignore
-      window.Telegram.WebApp.HapticFeedback.impactOccurred('medium')
-    }
+    telegramAuth.hapticFeedback('medium')
     onNavigate('requests')
   }
 

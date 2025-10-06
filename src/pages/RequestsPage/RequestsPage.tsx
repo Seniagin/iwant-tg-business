@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useUser } from '../../contexts/UserContext'
 import { useRequests } from '../../contexts/RequestsContext'
+import { telegramAuth } from '../../services/telegramAuth'
 import { ArrowLeft, MessageCircle, Plus } from 'lucide-react'
 import RequestCard from '../../components/RequestCard'
 import AddRequestModal from '../../components/AddRequestModal'
@@ -17,11 +18,7 @@ const RequestsPage: React.FC<RequestsPageProps> = ({ onNavigate }) => {
   const [activeTab, setActiveTab] = useState<'all' | 'matched'>('all')
 
   const handleBackToProfile = () => {
-    // @ts-ignore
-    if (window.Telegram?.WebApp?.HapticFeedback) {
-      // @ts-ignore
-      window.Telegram.WebApp.HapticFeedback.impactOccurred('light')
-    }
+    telegramAuth.hapticFeedback('light')
     onNavigate('profile')
   }
 

@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-// @ts-ignore
-import WebApp from '@twa-dev/sdk'
+import { telegramAuth } from '../services/telegramAuth'
 import { authService } from '../services/api'
 
 export interface User {
@@ -61,10 +60,9 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         }
 
         // Try Telegram authentication
-        const initData = WebApp.initData
-        if (initData) {
+        if (telegramAuth.isAvailable()) {
           console.log('Attempting Telegram authentication...')
-          const authResult = await authService.verifyTelegramAuth(initData)
+          const authResult = await authService.verifyTelegramAuth()
           
           if (authResult.success && authResult.user && authResult.token) {
             console.log('Telegram authentication successful:', authResult.user)
