@@ -25,16 +25,16 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '18'
-        cache: 'yarn'
+        cache: 'npm'
         
     - name: Install dependencies
-      run: yarn install --frozen-lockfile
+      run: npm ci
       
     - name: Run linting
-      run: yarn lint
+      run: npm run lint
       
     - name: Build
-      run: yarn build
+      run: npm run build
       env:
         REACT_APP_API_BASE_URL: ${{ vars.REACT_APP_API_BASE_URL || 'https://your-backend-domain.com/api' }}
         
