@@ -1,12 +1,11 @@
 // API service for external backend communication
 import { telegramAuth, TelegramUser } from './telegramAuth'
-import { retrieveRawInitData } from '@telegram-apps/sdk'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000'
 
 // Debug environment variables
 console.log('🔧 Environment Debug:')
-console.log('  - VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL)
+console.log('  - REACT_APP_API_BASE_URL:', process.env.REACT_APP_API_BASE_URL)
 console.log('  - Final API_BASE_URL:', API_BASE_URL)
 
 // TelegramUser interface is now imported from telegramAuth.ts
@@ -79,14 +78,13 @@ export const authService = {
       };
 
       console.log('🔐 Sending auth data to backend:', telegramAuthData)
-      const initDataRaw = retrieveRawInitData()
 
-      const response = await fetch(`${API_BASE_URL}/business-client/telegram-auth-sdk`, {
+      const response = await fetch(`${API_BASE_URL}/business-client/telegram-auth`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `tma ${initDataRaw}`,
         },
+        body: JSON.stringify(telegramAuthData),
       })
 
       if (!response.ok) {

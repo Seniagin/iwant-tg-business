@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/iwant-tg-business/static/css/main.bb7c6ee0.css",
+    "main.js": "/iwant-tg-business/static/js/main.f7bb5bb9.js",
+    "index.html": "/iwant-tg-business/index.html",
+    "main.bb7c6ee0.css.map": "/iwant-tg-business/static/css/main.bb7c6ee0.css.map",
+    "main.f7bb5bb9.js.map": "/iwant-tg-business/static/js/main.f7bb5bb9.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.bb7c6ee0.css",
+    "static/js/main.f7bb5bb9.js"
+  ]
+}

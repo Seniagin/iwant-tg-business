@@ -105,8 +105,8 @@ function App() {
         <div className="App">
           {renderCurrentPage()}
           
-          {/* Debug Panel Toggle - Only show in development */}
-          {import.meta.env.DEV && (
+              {/* Debug Panel Toggle - Only show in development */}
+              {process.env.NODE_ENV === 'development' && (
             <button
               onClick={() => setShowDebug(!showDebug)}
               style={{

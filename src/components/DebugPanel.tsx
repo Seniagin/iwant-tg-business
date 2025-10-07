@@ -26,8 +26,8 @@ const DebugPanel: React.FC<DebugPanelProps> = ({ isVisible, onClose }) => {
       auth_token: localStorage.getItem('auth_token'),
       activity_description: localStorage.getItem('activity_description')
     },
-    apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'Not set',
-    allEnvVars: import.meta.env
+    apiBaseUrl: process.env.REACT_APP_API_BASE_URL || 'Not set',
+    allEnvVars: process.env
   }
 
   const copyToClipboard = async () => {
