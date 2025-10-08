@@ -12,6 +12,7 @@ export interface User {
 
 interface UserContextType {
   isLoading: boolean
+  isAuthenticated: boolean
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined)
@@ -30,6 +31,7 @@ interface UserProviderProps {
 
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   useEffect(() => {
     console.log('UserProvider useEffect running')
@@ -41,6 +43,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
           const authResult = await authService.auth()
           
           if (authResult.success && authResult.token) {
+            setIsAuthenticated(true)
             console.log('Telegram authentication successful:', authResult.user)
           } else {
             console.log('Telegram authentication failed:', authResult.error)
@@ -60,6 +63,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
   const value = {
     isLoading,
+    isAuthenticated,
   }
 
   return (

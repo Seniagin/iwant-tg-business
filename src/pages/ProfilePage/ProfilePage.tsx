@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import './ProfilePage.css'
 import { apiService } from '../../services/api'
+import { useUser } from '../../contexts/UserContext'
 
 const ProfilePage: React.FC = () => {
   console.log('ProfilePage rendering')
+  const { isAuthenticated } = useUser()
   // const [business, setBusiness] = useState<Business | null>(null)
   const [description, setDescription] = useState('')
   const [isEditing, setIsEditing] = useState(false)
@@ -21,6 +23,13 @@ const ProfilePage: React.FC = () => {
     setIsEditing(false)
   }
 
+  if (!isAuthenticated) {
+    return (
+      <div className="profile-container">
+        <div className="loading">Loading...</div>
+      </div>
+    )
+  }
 
   return (
     <div className="profile-container">

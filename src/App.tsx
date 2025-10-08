@@ -35,14 +35,8 @@ function App() {
           setCurrentPage('profile')
         })
 
-        // Debug Telegram data
-        console.log('📊 Telegram initData:', telegramAuth.getInitData())
-        console.log('👤 Telegram initDataUnsafe:', telegramAuth.getInitDataUnsafe())
-        console.log('🎨 Telegram theme:', theme)
-        console.log('🎨 Color scheme:', telegramAuth.getColorScheme())
-
         // Check if user is authenticated
-        const user = telegramAuth.getUser()
+        const user = telegramAuth.getToken()
         console.log('👤 Telegram user:', user)
         if (user) {
           console.log('✅ Setting authenticated to true (Telegram user)')
