@@ -1,6 +1,9 @@
 // Telegram WebApp Authentication Service
 // Using native Telegram WebApp API with proper typing and error handling
 
+import { retrieveRawInitData } from "@telegram-apps/sdk"
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000'
+
 export interface TelegramUser {
   id: number
   first_name: string
@@ -11,14 +14,29 @@ export interface TelegramUser {
   is_premium?: boolean
 }
 
+export interface AuthResponse {
+  success: boolean
+  user?: TelegramUser
+  token?: string
+  error?: string
+}
+
 // Use the existing Telegram WebApp types from @types/telegram-web-app
 
-class TelegramAuthService {
+class AuthService {
   private webApp: any = null
   private isInitialized = false
 
   constructor() {
     this.initialize()
+  }
+
+  public setToken(token: string): void {
+    localStorage.setItem('auth_token', token)
+  }
+
+  public getToken(): string | null {
+    return localStorage.getItem('auth_token')
   }
 
   private initialize(): void {
@@ -34,6 +52,37 @@ class TelegramAuthService {
       }
     } catch (error) {
       console.error('❌ Failed to initialize Telegram WebApp:', error)
+    }
+  }
+
+  public async auth(): Promise<AuthResponse> {
+    const initDataRaw = retrieveRawInitData()
+
+    const response = await fetch(`${API_BASE_URL}/business-client/telegram-auth`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `tma ${initDataRaw}`,
+      },
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('❌ Backend auth failed:', response.status, errorText)
+      throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
+    }
+
+    const authResult = await response.json()
+
+    const result = authResult.data;
+
+    if(authResult.success && result) {
+      this.setToken(result.token)
+    }
+
+    return {
+      success: false,
+      error: authResult.error
     }
   }
 
@@ -130,5 +179,5 @@ class TelegramAuthService {
 }
 
 // Export singleton instance
-export const telegramAuth = new TelegramAuthService()
+export const telegramAuth = new AuthService()
 export default telegramAuth

@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useUser } from '../../contexts/UserContext'
 import { useRequests } from '../../contexts/RequestsContext'
-import { telegramAuth } from '../../services/telegramAuth'
+import { telegramAuth } from '../../services/auth'
 import { ArrowLeft, MessageCircle, Plus } from 'lucide-react'
 import RequestCard from '../../components/RequestCard'
 import AddRequestModal from '../../components/AddRequestModal'

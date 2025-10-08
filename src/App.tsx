@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { telegramAuth } from './services/telegramAuth'
+import { telegramAuth } from './services/auth'
 import { UserProvider } from './contexts/UserContext'
 import { RequestsProvider } from './contexts/RequestsContext'
 import LoginPage from './pages/LoginPage/LoginPage'
