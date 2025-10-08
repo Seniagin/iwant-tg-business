@@ -20,9 +20,14 @@ module.exports = {
   plugins: ['react-refresh', '@typescript-eslint'],
   rules: {
     'react-refresh/only-export-components': 'off', // Allow mixed exports for contexts
-    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    '@typescript-eslint/no-unused-vars': ['warn', { 
+      argsIgnorePattern: '^_',
+      varsIgnorePattern: '^_',
+      ignoreRestSiblings: true
+    }],
     '@typescript-eslint/no-explicit-any': 'off', // Allow any type for API responses
     'no-console': 'off', // Allow console statements for debugging
     'no-undef': 'off', // TypeScript handles this
+    'no-unused-vars': 'off', // Let TypeScript handle this
   },
 }

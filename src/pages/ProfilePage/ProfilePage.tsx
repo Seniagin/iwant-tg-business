@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import './ProfilePage.css'
-import { apiService, Business } from '../../services/api'
+import { apiService } from '../../services/api'
 
 const ProfilePage: React.FC = () => {
   console.log('ProfilePage rendering')
