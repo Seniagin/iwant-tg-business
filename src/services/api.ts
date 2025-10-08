@@ -34,7 +34,33 @@ export interface ServerAuthResponse {
   }
 }
 
+export interface Business {
+  id: number
+  name: string
+  description: string
+}
+
 export const apiService = {
+  async getBusiness(): Promise<Business> {
+    const token = authService.getToken()
+    try {
+      const response = await fetch(`${API_BASE_URL}/business-client/business`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to get business:', error)
+      throw error
+    }
+  },
+
   async getActivityDescription(): Promise<any> {
     const token = authService.getToken()
     try {

@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react'
 import './ProfilePage.css'
-import { apiService } from '../../services/api'
+import { apiService, Business } from '../../services/api'
 
 const ProfilePage: React.FC = () => {
   console.log('ProfilePage rendering')
+  const [business, setBusiness] = useState<Business | null>(null)
   const [description, setDescription] = useState('')
   const [isEditing, setIsEditing] = useState(false)
 
   useEffect(() => {
     (async () => {
-      const activityDescription = await apiService.getActivityDescription()
-      setDescription(activityDescription)
+      const business = await apiService.getBusiness()
+      setBusiness(business)
+      setDescription(business.description)
     })()
   }, [])
 
