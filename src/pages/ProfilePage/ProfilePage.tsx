@@ -4,14 +4,14 @@ import { apiService, Business } from '../../services/api'
 
 const ProfilePage: React.FC = () => {
   console.log('ProfilePage rendering')
-  const [business, setBusiness] = useState<Business | null>(null)
+  // const [business, setBusiness] = useState<Business | null>(null)
   const [description, setDescription] = useState('')
   const [isEditing, setIsEditing] = useState(false)
 
   useEffect(() => {
     (async () => {
       const business = await apiService.getBusiness()
-      setBusiness(business)
+      // setBusiness(business)
       setDescription(business.description)
     })()
   }, [])
