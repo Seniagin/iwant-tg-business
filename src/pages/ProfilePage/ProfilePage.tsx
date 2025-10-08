@@ -1,14 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { telegramAuth } from '../../services/auth'
-import { MessageCircle } from 'lucide-react'
 import './ProfilePage.css'
 import { apiService } from '../../services/api'
 
-interface ProfilePageProps {
-  onNavigate: (page: 'login' | 'profile' | 'requests') => void
-}
-
-const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
+const ProfilePage: React.FC = () => {
   console.log('ProfilePage rendering')
   const [description, setDescription] = useState('')
   const [isEditing, setIsEditing] = useState(false)
@@ -25,10 +19,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
     setIsEditing(false)
   }
 
-  const handleViewRequests = () => {
-    telegramAuth.hapticFeedback('medium')
-    onNavigate('requests')
-  }
 
   return (
     <div className="profile-container">
@@ -69,22 +59,13 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
               <p>{description}</p>
             ) : (
               <p className="placeholder-text">
-                Click "Edit" to describe what you do and start receiving relevant customer requests.
+                Click "Edit" to describe what you do.
               </p>
             )}
           </div>
         )}
       </div>
 
-      <div className="actions-section">
-        <button
-          className="action-button"
-          onClick={handleViewRequests}
-        >
-          <MessageCircle size={24} />
-          <span>View Customer Requests</span>
-        </button>
-      </div>
     </div>
   )
 }

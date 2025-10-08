@@ -1,6 +1,5 @@
 // API service for external backend communication
 import authService from './auth'
-import { retrieveRawInitData } from '@telegram-apps/sdk'
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000'
 

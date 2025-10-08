@@ -1,14 +1,12 @@
 import { useEffect, useState } from 'react'
 import { telegramAuth } from './services/auth'
 import { UserProvider } from './contexts/UserContext'
-import { RequestsProvider } from './contexts/RequestsContext'
 import LoginPage from './pages/LoginPage/LoginPage'
 import ProfilePage from './pages/ProfilePage/ProfilePage'
-import RequestsPage from './pages/RequestsPage/RequestsPage'
 import LoadingSpinner from './components/LoadingSpinner'
 import DebugPanel from './components/DebugPanel'
 
-type AppPage = 'login' | 'profile' | 'requests'
+type AppPage = 'login' | 'profile'
 
 function App() {
   const [isLoading, setIsLoading] = useState(true)
@@ -32,9 +30,9 @@ function App() {
         }
 
         // Configure main menu button
-        telegramAuth.setMainButton('View Requests', () => {
+        telegramAuth.setMainButton('View Profile', () => {
           console.log('📱 Main button clicked')
-          setCurrentPage('requests')
+          setCurrentPage('profile')
         })
 
         // Debug Telegram data
@@ -90,9 +88,7 @@ function App() {
 
     switch (currentPage) {
       case 'profile':
-        return <ProfilePage onNavigate={setCurrentPage} />
-      case 'requests':
-        return <RequestsPage onNavigate={setCurrentPage} />
+        return <ProfilePage />
       default:
         return <LoginPage onLogin={() => setCurrentPage('profile')} />
     }
@@ -101,36 +97,34 @@ function App() {
   console.log('Rendering main app content')
   return (
     <UserProvider>
-      <RequestsProvider>
-        <div className="App">
-          {renderCurrentPage()}
-          
-              {/* Debug Panel Toggle - Only show in development */}
-              {process.env.NODE_ENV === 'development' && (
-            <button
-              onClick={() => setShowDebug(!showDebug)}
-              style={{
-                position: 'fixed',
-                bottom: '20px',
-                right: '20px',
-                background: '#007bff',
-                color: 'white',
-                border: 'none',
-                borderRadius: '50%',
-                width: '50px',
-                height: '50px',
-                cursor: 'pointer',
-                zIndex: 1000,
-                fontSize: '20px'
-              }}
-            >
-              🐛
-            </button>
-          )}
-          
-          <DebugPanel isVisible={showDebug} onClose={() => setShowDebug(false)} />
-        </div>
-      </RequestsProvider>
+      <div className="App">
+        {renderCurrentPage()}
+        
+        {/* Debug Panel Toggle - Only show in development */}
+        {process.env.NODE_ENV === 'development' && (
+          <button
+            onClick={() => setShowDebug(!showDebug)}
+            style={{
+              position: 'fixed',
+              bottom: '20px',
+              right: '20px',
+              background: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '50%',
+              width: '50px',
+              height: '50px',
+              cursor: 'pointer',
+              zIndex: 1000,
+              fontSize: '20px'
+            }}
+          >
+            🐛
+          </button>
+        )}
+        
+        <DebugPanel isVisible={showDebug} onClose={() => setShowDebug(false)} />
+      </div>
     </UserProvider>
   )
 }
