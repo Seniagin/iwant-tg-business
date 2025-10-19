@@ -2,20 +2,16 @@ import React from 'react'
 // @ts-ignore
 import WebApp from '@twa-dev/sdk'
 import { useUser } from '../../contexts/UserContext'
+import { useAuth } from '../../contexts/AuthContext'
 import './LoginPage.css'
 
-interface LoginPageProps {
-  onLogin: () => void
-}
-
-const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
+const LoginPage: React.FC = () => {
   console.log('LoginPage rendering')
   const { isLoading } = useUser()
+  const { login, error } = useAuth()
 
-  const handleLogin = () => {
-    // In a real app, you would validate the user data
-    // For now, we'll just navigate to the profile page
-    onLogin()
+  const handleLogin = async () => {
+    await login()
   }
 
   // Demo mode - show login button even if not in Telegram
@@ -38,6 +34,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         </div>
         
         <div className="login-content">
+          {error && (
+            <div className="error-message">
+              <p>{error}</p>
+            </div>
+          )}
+          
           <div className="user-info">
             <div className="user-avatar">
               {WebApp.initDataUnsafe?.user?.photo_url ? (

@@ -5,28 +5,42 @@ import { useUser } from '../../contexts/UserContext'
 
 const ProfilePage: React.FC = () => {
   console.log('ProfilePage rendering')
-  const { isAuthenticated } = useUser()
+  const { isAuthenticated, user, isLoading } = useUser()
   // const [business, setBusiness] = useState<Business | null>(null)
   const [description, setDescription] = useState('')
   const [isEditing, setIsEditing] = useState(false)
 
   useEffect(() => {
     (async () => {
-      const business = await apiService.getBusiness()
-      // setBusiness(business)
-      setDescription(business.description)
+      try {
+        const business = await apiService.getBusiness()
+        // setBusiness(business)
+        setDescription(business.description)
+      } catch (error) {
+        console.error('Failed to load business data:', error)
+        // Set a default description if API fails
+        setDescription(user?.activity_description || '')
+      }
     })()
-  }, [])
+  }, [user])
 
   const handleSaveDescription = () => {
     apiService.updateActivityDescription(description)
     setIsEditing(false)
   }
 
-  if (!isAuthenticated) {
+  if (isLoading) {
     return (
       <div className="profile-container">
         <div className="loading">Loading...</div>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="profile-container">
+        <div className="loading">Please log in to view your profile.</div>
       </div>
     )
   }
@@ -35,6 +49,12 @@ const ProfilePage: React.FC = () => {
     <div className="profile-container">
       <div className="header">
         <h1>My Profile</h1>
+        {user && (
+          <div className="user-info">
+            <p>Welcome, {user.first_name} {user.last_name}</p>
+            {user.username && <p>@{user.username}</p>}
+          </div>
+        )}
       </div>
 
       <div className="activity-section">

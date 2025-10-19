@@ -1,0 +1,186 @@
+.request-detail-page {
+  min-height: 100vh;
+  background: var(--tg-theme-bg-color, #ffffff);
+  color: var(--tg-theme-text-color, #000000);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+
+.request-detail-content {
+  padding: 24px 20px;
+  max-width: 800px;
+  margin: 0 auto;
+  padding-bottom: 120px; /* More space for bottom actions on iPhone */
+}
+
+.request-info {
+  background: var(--tg-theme-secondary-bg-color, #ffffff);
+  border: 1px solid var(--tg-theme-section-separator-color, #e9ecef);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.request-description {
+  margin-bottom: 32px;
+}
+
+.request-description h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: var(--tg-theme-text-color, #000000);
+}
+
+.request-description p {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--tg-theme-text-color, #000000);
+  margin: 0;
+  white-space: pre-line;
+}
+
+.bottom-actions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--tg-theme-bg-color, #ffffff);
+  border-top: 1px solid var(--tg-theme-section-separator-color, #e9ecef);
+  padding: 20px;
+  display: flex;
+  gap: 16px;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  /* Handle both full screen and windowed mode */
+  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  /* Fallback for windowed mode */
+  margin-bottom: 0;
+}
+
+.action-button {
+  padding: 18px 24px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  flex: 1;
+  min-height: 52px;
+  /* Better touch target for iPhone */
+  -webkit-tap-highlight-color: transparent;
+}
+
+.action-button.primary {
+  background: var(--tg-theme-button-color, #007bff);
+  color: var(--tg-theme-button-text-color, #ffffff);
+}
+
+.action-button.primary:hover {
+  background: var(--tg-theme-button-color, #0056b3);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.action-button.secondary {
+  background: var(--tg-theme-secondary-bg-color, #f8f9fa);
+  color: var(--tg-theme-text-color, #000000);
+  border: 2px solid var(--tg-theme-section-separator-color, #e9ecef);
+}
+
+.action-button.secondary:hover {
+  background: var(--tg-theme-hint-color, #e9ecef);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+
+.loading-container,
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+  padding: 20px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--tg-theme-hint-color, #e9ecef);
+  border-top: 4px solid var(--tg-theme-button-color, #007bff);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-container h2 {
+  color: var(--tg-theme-destructive-text-color, #dc3545);
+  margin-bottom: 10px;
+}
+
+.retry-button {
+  background: var(--tg-theme-button-color, #007bff);
+  color: var(--tg-theme-button-text-color, #ffffff);
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin: 10px;
+}
+
+.retry-button:hover {
+  background: var(--tg-theme-button-color, #0056b3);
+  transform: translateY(-1px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .request-detail-header {
+    padding: 16px;
+  }
+  
+  .request-detail-header h1 {
+    font-size: 18px;
+  }
+  
+  .request-detail-content {
+    padding: 16px;
+  }
+  
+  .request-info {
+    padding: 20px;
+  }
+  
+  .bottom-actions {
+    padding: 16px 16px calc(16px + env(safe-area-inset-bottom)) 16px;
+    gap: 12px;
+  }
+  
+  .action-button {
+    padding: 16px 20px;
+    font-size: 15px;
+    min-height: 48px;
+  }
+}
+
+/* Windowed mode adjustments */
+.windowed-mode .bottom-actions {
+  padding-bottom: 20px; /* Remove safe area inset in windowed mode */
+}
+
+.windowed-mode .request-detail-content {
+  padding-bottom: 100px; /* Adjust content padding for windowed mode */
+}

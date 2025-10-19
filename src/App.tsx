@@ -1,18 +1,67 @@
 import { useEffect, useState } from 'react'
 import { telegramAuth } from './services/auth'
 import { UserProvider } from './contexts/UserContext'
+import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { RequestProvider } from './contexts/RequestContext'
 import LoginPage from './pages/LoginPage/LoginPage'
 import ProfilePage from './pages/ProfilePage/ProfilePage'
+import RequestsPage from './pages/RequestsPage/RequestsPage'
+import RequestDetailPage from './pages/RequestDetailPage/RequestDetailPage'
 import LoadingSpinner from './components/LoadingSpinner'
 import DebugPanel from './components/DebugPanel'
 
-type AppPage = 'login' | 'profile'
+type AppPage = 'login' | 'profile' | 'request' | 'request-detail'
 
-function App() {
-  const [isLoading, setIsLoading] = useState(true)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [currentPage, setCurrentPage] = useState<AppPage>('login')
+function AppContent() {
+  const { isAuthenticated, isLoading, error } = useAuth()
+  const [currentPage, setCurrentPage] = useState<AppPage | null>(null)
   const [showDebug, setShowDebug] = useState(false)
+  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null)
+
+  // Utility functions for URL management
+  const updateURL = (page: AppPage, requestId?: string) => {
+    const url = new URL(window.location.href)
+    url.searchParams.set('page', page)
+    
+    if (requestId) {
+      url.searchParams.set('request_id', requestId)
+    } else {
+      url.searchParams.delete('request_id')
+    }
+    
+    // Update URL without causing a page reload
+    window.history.pushState({}, '', url.toString())
+  }
+
+  const navigateToPage = (page: AppPage, requestId?: string) => {
+    setCurrentPage(page)
+    if (requestId) {
+      setSelectedRequestId(requestId)
+    }
+    updateURL(page, requestId)
+  }
+
+
+  // Handle browser back/forward navigation
+  useEffect(() => {
+    const handlePopState = () => {
+      const urlParams = new URLSearchParams(window.location.search)
+      const page = urlParams.get('page') as AppPage
+      const requestId = urlParams.get('request_id')
+      
+      if (page) {
+        setCurrentPage(page)
+        if (requestId) {
+          setSelectedRequestId(requestId)
+        } else {
+          setSelectedRequestId(null)
+        }
+      }
+    }
+
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
 
   useEffect(() => {
     console.log('🚀 App initializing...')
@@ -29,97 +78,94 @@ function App() {
           document.body.style.color = theme.text_color
         }
 
-        // Configure main menu button
-        telegramAuth.setMainButton('View Profile', () => {
-          console.log('📱 Main button clicked')
-          setCurrentPage('profile')
-        })
-
-        // Check if user is authenticated
-        const user = telegramAuth.getToken()
-        console.log('👤 Telegram user:', user)
-        if (user) {
-          console.log('✅ Setting authenticated to true (Telegram user)')
-          setIsAuthenticated(true)
-          setCurrentPage('profile')
+        // Check if we're in windowed mode and add appropriate CSS class
+        const isWindowed = window.innerHeight < window.screen.height * 0.9
+        if (isWindowed) {
+          document.body.classList.add('windowed-mode')
+          console.log('🪟 Running in windowed mode')
         } else {
-          console.log('⚠️ Setting authenticated to true (demo mode)')
-          // For demo purposes, simulate authentication
-          setIsAuthenticated(true)
-          setCurrentPage('profile')
+          document.body.classList.add('fullscreen-mode')
+          console.log('📱 Running in fullscreen mode')
         }
-      } else {
-        console.log('❌ Not running in Telegram environment, using demo mode')
-        console.log('⚠️ Setting authenticated to true (demo mode - catch)')
-        // For demo purposes, simulate authentication
-        setIsAuthenticated(true)
-        setCurrentPage('profile')
+
+        // Main menu button removed - action buttons are now at bottom of request detail page
       }
     } catch (error) {
-      console.log('❌ Error during initialization, using demo mode', error)
-      console.log('⚠️ Setting authenticated to true (demo mode - catch)')
-      // For demo purposes, simulate authentication
-      setIsAuthenticated(true)
-      setCurrentPage('profile')
+      console.log('❌ Error during Telegram initialization:', error)
     }
-
-    console.log('✅ Setting loading to false')
-    setIsLoading(false)
-    console.log('🎉 App initialization complete')
   }, [])
+
+  // Handle URL parameters and page routing when authentication state changes
+  useEffect(() => {
+    if (!isLoading) {
+      const urlParams = new URLSearchParams(window.location.search)
+      const page = urlParams.get('page')
+      const requestId = urlParams.get('request_id')
+      
+      console.log('🔗 URL parameters - page:', page, 'request_id:', requestId)
+
+      if (isAuthenticated) {
+        // Set initial page based on URL parameter
+        if (page === 'request') {
+          navigateToPage('request')
+        } else if (page === 'request-detail' && requestId) {
+          navigateToPage('request-detail', requestId)
+        } else {
+          navigateToPage('profile')
+        }
+      } else {
+        // Not authenticated, show login
+        setCurrentPage('login')
+      }
+    }
+  }, [isAuthenticated, isLoading])
 
   console.log('App render - isLoading:', isLoading, 'isAuthenticated:', isAuthenticated, 'currentPage:', currentPage)
 
-  if (isLoading) {
+  if (isLoading || currentPage === null) {
     console.log('Rendering LoadingSpinner')
     return <LoadingSpinner />
   }
 
   const renderCurrentPage = () => {
     if (!isAuthenticated) {
-      return <LoginPage onLogin={() => setCurrentPage('profile')} />
+      return <LoginPage />
     }
 
     switch (currentPage) {
       case 'profile':
         return <ProfilePage />
+      case 'request':
+        return <RequestsPage onRequestClick={(requestId) => {
+          navigateToPage('request-detail', requestId)
+        }} />
+      case 'request-detail':
+        return <RequestDetailPage 
+          requestId={selectedRequestId || undefined} 
+          onBack={() => navigateToPage('request')} 
+        />
       default:
-        return <LoginPage onLogin={() => setCurrentPage('profile')} />
+        return <LoginPage />
     }
   }
 
   console.log('Rendering main app content')
   return (
-    <UserProvider>
-      <div className="App">
-        {renderCurrentPage()}
-        
-        {/* Debug Panel Toggle - Only show in development */}
-        {process.env.NODE_ENV === 'development' && (
-          <button
-            onClick={() => setShowDebug(!showDebug)}
-            style={{
-              position: 'fixed',
-              bottom: '20px',
-              right: '20px',
-              background: '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '50%',
-              width: '50px',
-              height: '50px',
-              cursor: 'pointer',
-              zIndex: 1000,
-              fontSize: '20px'
-            }}
-          >
-            🐛
-          </button>
-        )}
-        
-        <DebugPanel isVisible={showDebug} onClose={() => setShowDebug(false)} />
-      </div>
-    </UserProvider>
+    <div className="App">
+      {renderCurrentPage()}
+    </div>
+  )
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <UserProvider>
+        <RequestProvider>
+          <AppContent />
+        </RequestProvider>
+      </UserProvider>
+    </AuthProvider>
   )
 }
 

@@ -30,6 +30,20 @@
   margin-bottom: 30px;
 }
 
+.error-message {
+  background: #fee;
+  border: 1px solid #fcc;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 20px;
+  color: #c33;
+}
+
+.error-message p {
+  margin: 0;
+  font-size: 14px;
+}
+
 .user-info {
   display: flex;
   align-items: center;

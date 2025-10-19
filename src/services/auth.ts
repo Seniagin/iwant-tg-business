@@ -39,6 +39,10 @@ class AuthService {
     return localStorage.getItem('auth_token')
   }
 
+  public isAuthenticated(): boolean {
+    return !!this.getToken()
+  }
+
   private initialize(): void {
     try {
       if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
@@ -56,34 +60,63 @@ class AuthService {
   }
 
   public async auth(): Promise<AuthResponse> {
-    const initDataRaw = retrieveRawInitData()
+    try {
+      const initDataRaw = retrieveRawInitData()
 
-    const response = await fetch(`${API_BASE_URL}/business-client/telegram-auth`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `tma ${initDataRaw}`,
-      },
-    })
+      const response = await fetch(`${API_BASE_URL}/business-client/telegram-auth`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `tma ${initDataRaw}`,
+        },
+      })
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('❌ Backend auth failed:', response.status, errorText)
-      throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('❌ Backend auth failed:', response.status, errorText)
+        return {
+          success: false,
+          error: `HTTP error! status: ${response.status}, message: ${errorText}`
+        }
+      }
+
+      const authResult:AuthResponse = await response.json()
+
+      if (authResult.success && authResult?.token) {
+        this.setToken(authResult.token)
+        return {
+          success: true,
+          user: authResult.user,
+          token: authResult.token
+        }
+      }
+
+      return {
+        success: false,
+        error: authResult.error || 'Authentication failed'
+      }
+    } catch (error) {
+      console.error('❌ Auth error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }
     }
+  }
 
-    const authResult = await response.json()
+  public async refreshAuth(): Promise<AuthResponse> {
+    console.log('🔄 Attempting to refresh authentication...')
+    
+    // Clear existing token
+    this.clearToken()
+    
+    // Try to authenticate again
+    return await this.auth()
+  }
 
-    const result = authResult.data;
-
-    if(authResult.success && result) {
-      this.setToken(result.token)
-    }
-
-    return {
-      success: false,
-      error: authResult.error
-    }
+  public clearToken(): void {
+    localStorage.removeItem('auth_token')
+    console.log('🗑️ Token cleared')
   }
 
   public isAvailable(): boolean {

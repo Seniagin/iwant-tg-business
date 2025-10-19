@@ -115,3 +115,5 @@ The app uses CSS variables that automatically adapt to Telegram's theme:
 ## License
 
 This project is licensed under the MIT License.
+
+ngrok http 3300
