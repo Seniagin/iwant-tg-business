@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { apiService, Demand } from '../../services/api'
+import { apiService } from '../../services/api'
 import './AllRequestsPage.css'
+import { Demand } from '../../types'
 
 interface Request {
   id: string

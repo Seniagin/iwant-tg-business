@@ -1,4 +1,5 @@
 // API service for external backend communication
+import { Business, Demand, User } from '../types'
 import authService from './auth'
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000'
@@ -8,64 +9,10 @@ console.log('🔧 Environment Debug:')
 console.log('  - REACT_APP_API_BASE_URL:', process.env.REACT_APP_API_BASE_URL)
 console.log('  - Final API_BASE_URL:', API_BASE_URL)
 
-export interface TelegramAuthDto {
-  id: number
-  first_name: string
-  last_name?: string
-  username?: string
-  language_code?: string
-  photo_url?: string
-  auth_date: string
-  hash: string
-}
-
-export interface ServerAuthResponse {
-  message: string,
-  token: string,
-  user: {
-      id: number,
-      telegramId: number,
-      telegramUsername: string,
-      telegramFirstName: string,
-      telegramLastName: string,
-      authProvider: string,
-      isActive: boolean,
-      createdAt: string
-  }
-}
-
-export interface Business {
-  id: number
-  name: string
-  description: string
-}
-
-export interface Demand {
-  id: number
-  categoryId: string
-  userId: number
-  transcription: string
-  translation: string
-  summarizedTranslation: string
-  createdAt: string
-  updatedAt: string
-}
-
-export interface User {
-  id: number
-  telegramId: number
-  telegramUsername: string
-  telegramFirstName: string
-  telegramLastName: string
-  authProvider: string
-  isActive: boolean
-  createdAt: string
-}
 
 export const apiService = {
   async checkAuth(): Promise<User> {
     const token = authService.getToken()
-    console.log('🔑 Checking authorization with token:', token)
     
     if (!token) {
       throw new Error('No token available')
@@ -80,9 +27,6 @@ export const apiService = {
         },
         redirect: 'manual', // Prevent automatic redirects
       })
-
-      console.log('📡 Auth check response status:', response.status)
-      console.log('📡 Auth check response type:', response.type)
 
       // Handle redirects manually
       if (response.type === 'opaqueredirect' || response.status === 302 || response.status === 304) {
@@ -104,7 +48,6 @@ export const apiService = {
       }
 
       const user = await response.json()
-      console.log('✅ Authorization check successful:', user)
       return user
     } catch (error) {
       console.error('Failed to check authorization:', error)
@@ -355,6 +298,51 @@ export const apiService = {
       return result
     } catch (error) {
       console.error('Failed to make offer:', error)
+      throw error
+    }
+  },
+
+  async getAvailableCurrenciesList(): Promise<string[]> {
+    const token = authService.getToken()
+    try {
+      const response = await fetch(`${API_BASE_URL}/business-client/manage/currencies/list`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        redirect: 'manual', // Prevent automatic redirects
+      })
+
+      return await response.json()
+    } catch (error) {
+      console.error('Failed to get available currencies list:', error)
+      throw error
+    }
+  },
+
+  async updateBusinessCurrency(currency: string): Promise<any> {
+    const token = authService.getToken()
+    try {
+      const response = await fetch(`${API_BASE_URL}/business-client/manage/currency/set-default`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ currency }),
+        redirect: 'manual', // Prevent automatic redirects
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('❌ Update business currency API error:', response.status, errorText)
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error('Failed to update business currency:', error)
       throw error
     }
   },

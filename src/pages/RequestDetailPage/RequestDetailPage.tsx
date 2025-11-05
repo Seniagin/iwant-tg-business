@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useRequest } from '../../contexts/RequestContext'
 import './RequestDetailPage.css'
+import OfferForm, { OfferFormHandle } from './OfferForm/OfferForm'
 
 interface RequestDetailPageProps {
   requestId?: string
@@ -17,11 +18,9 @@ const RequestDetailPage: React.FC<RequestDetailPageProps> = ({ requestId, onBack
   } = useRequest()
 
   const [hasLoaded, setHasLoaded] = useState(false)
-  const [price, setPrice] = useState('')
-  const [selectedTime, setSelectedTime] = useState<'TODAY' | 'THIS_WEEK' | 'AFTER_THIS_WEEK'>('THIS_WEEK')
-  const [comment, setComment] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const offerFormRef = useRef<OfferFormHandle>(null)
 
   useEffect(() => {
     if (requestId) {
@@ -35,24 +34,21 @@ const RequestDetailPage: React.FC<RequestDetailPageProps> = ({ requestId, onBack
   }, [requestId, loadRequest])
 
   const handleSubmitOffer = async () => {
-    if (!currentRequest?.id) return
+    if (!currentRequest?.id || !offerFormRef.current) return
+
+    const formData = offerFormRef.current.getFormData()
+    if (!formData) {
+      setError('Please enter a valid price')
+      return
+    }
 
     try {
       setIsSubmitting(true)
       setError(null)
 
-      // Validate price if provided
-      if (price.trim() && isNaN(parseFloat(price.trim()))) {
-        setError('Please enter a valid price')
-        setIsSubmitting(false)
-        return
-      }
-
       const offerData = {
         demandId: parseInt(currentRequest.id),
-        price: price.trim() ? parseFloat(price.trim()) : undefined,
-        time: selectedTime,
-        comment: comment.trim() || undefined
+        ...formData
       }
 
       await makeOffer(offerData)
@@ -67,17 +63,6 @@ const RequestDetailPage: React.FC<RequestDetailPageProps> = ({ requestId, onBack
     }
   }
 
-  const handleIgnore = () => {
-    if (currentRequest?.id) {
-      ignoreRequest(currentRequest.id)
-    }
-  }
-
-  const timeOptions = [
-    { value: 'TODAY' as const, label: 'Today', icon: '⚡' },
-    { value: 'THIS_WEEK' as const, label: 'This Week', icon: '📅' },
-    { value: 'AFTER_THIS_WEEK' as const, label: 'After This Week', icon: '⏰' }
-  ]
 
   // Always show loading until we have data or have finished loading
   if (!hasLoaded || requestLoading || !currentRequest) {
@@ -101,90 +86,25 @@ const RequestDetailPage: React.FC<RequestDetailPageProps> = ({ requestId, onBack
       <div className="request-detail-content">
         <div className="request-info">
           <div className="request-description">
-            <h2>Request Description</h2>
             <p>{currentRequest.description}</p>
           </div>
         </div>
 
         {/* Offer Form Section */}
-
+        <OfferForm
+          ref={offerFormRef}
+          error={error}
+        />
       </div>
 
       <div className="bottom-actions">
-        <div className="offer-form-section">
-          {/* Error Display */}
-          {error && (
-            <div className="error-message">
-              {error}
-            </div>
-          )}
-
-          {/* Price Section */}
-          <div className="form-section">
-            <label className="form-label">Price (optional)</label>
-            <div className="price-input-container">
-              <input
-                type="text"
-                className="price-input"
-                placeholder="Enter your price"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-              />
-              <div className="price-controls">
-                <button
-                  className="price-arrow"
-                  onClick={() => {
-                    const current = parseFloat(price) || 0
-                    setPrice((current + 1).toString())
-                  }}
-                >▲</button>
-                <button
-                  className="price-arrow"
-                  onClick={() => {
-                    const current = parseFloat(price) || 0
-                    if (current > 0) {
-                      setPrice((current - 1).toString())
-                    }
-                  }}
-                >▼</button>
-              </div>
-            </div>
-          </div>
-          {/* Comment Section */}
-          <div className="form-section">
-            <label className="form-label">Comment (optional)</label>
-            <textarea
-              className="comment-textarea"
-              placeholder="Add any additional details..."
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              rows={4}
-            />
-          </div>
-          {/* Time Selection Section */}
-          <div className="form-section">
-            <label className="form-label">Time</label>
-            <div className="time-options">
-              {timeOptions.map((option) => (
-                <button
-                  key={option.value}
-                  className={`time-option ${selectedTime === option.value ? 'selected' : ''}`}
-                  onClick={() => setSelectedTime(option.value)}
-                >
-                  <span className="time-icon">{option.icon}</span>
-                  <span className="time-label">{option.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-          <button
-            className="action-button primary"
-            onClick={handleSubmitOffer}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Submitting...' : 'Submit Offer'}
-          </button>
-        </div>
+        <button
+          className="action-button primary"
+          onClick={handleSubmitOffer}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Submitting...' : 'Submit Offer'}
+        </button>
       </div>
 
     </div>

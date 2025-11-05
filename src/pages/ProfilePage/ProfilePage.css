@@ -165,3 +165,37 @@
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(36, 129, 204, 0.3);
 }
+
+.currency-select-container {
+  padding: 16px;
+  background-color: var(--tg-theme-bg-color, #ffffff);
+  border-radius: 12px;
+  border: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+}
+
+.currency-select {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 16px;
+  font-family: inherit;
+  background-color: var(--tg-theme-bg-color, #ffffff);
+  color: var(--tg-theme-text-color, #000000);
+  border: 2px solid var(--tg-theme-section-separator-color, #e9ecef);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 40px;
+}
+
+.currency-select:focus {
+  outline: none;
+  border-color: var(--tg-theme-button-color, #2481cc);
+}
+
+.currency-select:hover {
+  border-color: var(--tg-theme-button-color, #2481cc);
+}

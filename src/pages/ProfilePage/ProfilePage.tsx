@@ -4,32 +4,48 @@ import { apiService } from '../../services/api'
 import { useUser } from '../../contexts/UserContext'
 
 const ProfilePage: React.FC = () => {
-  console.log('ProfilePage rendering')
-  const { isAuthenticated, user, isLoading } = useUser()
-  // const [business, setBusiness] = useState<Business | null>(null)
+  const { isAuthenticated, user, isLoading, business, businessLoading, refreshBusiness } = useUser()
   const [description, setDescription] = useState('')
   const [isEditing, setIsEditing] = useState(false)
+  const [currency, setCurrency] = useState('')
+  const [currencies, setCurrencies] = useState<string[]>([])
 
   useEffect(() => {
     (async () => {
       try {
-        const business = await apiService.getBusiness()
-        // setBusiness(business)
-        setDescription(business.description)
+        const currenciesList = await apiService.getAvailableCurrenciesList()
+        setCurrencies(currenciesList)
       } catch (error) {
-        console.error('Failed to load business data:', error)
-        // Set a default description if API fails
-        setDescription(user?.activity_description || '')
+        console.error('Failed to load currencies list:', error)
       }
     })()
-  }, [user])
+  }, [])
+
+  useEffect(() => {
+    if (business) {
+      setDescription(business.description)
+      setCurrency(business.currency)
+    }
+  }, [business])
 
   const handleSaveDescription = () => {
     apiService.updateActivityDescription(description)
     setIsEditing(false)
   }
 
-  if (isLoading) {
+  const handleCurrencyChange = async (newCurrency: string) => {
+    try {
+      await apiService.updateBusinessCurrency(newCurrency)
+      setCurrency(newCurrency)
+      // Refresh business data to get updated currency
+      await refreshBusiness()
+    } catch (error) {
+      console.error('Failed to update currency:', error)
+      // Optionally show error message to user
+    }
+  }
+
+  if (isLoading || businessLoading) {
     return (
       <div className="profile-container">
         <div className="loading">Loading...</div>
@@ -96,6 +112,31 @@ const ProfilePage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {business && (
+        <div className="activity-section">
+          <div className="section-header">
+            <h3>Default Currency</h3>
+          </div>
+          <div className="currency-select-container">
+            <select
+              className="currency-select"
+              value={currency}
+              onChange={(e) => handleCurrencyChange(e.target.value)}
+            >
+              {currencies.length === 0 ? (
+                <option value="">Loading currencies...</option>
+              ) : (
+                currencies.map((curr) => (
+                  <option key={curr} value={curr}>
+                    {curr}
+                  </option>
+                ))
+              )}
+            </select>
+          </div>
+        </div>
+      )}
 
     </div>
   )
