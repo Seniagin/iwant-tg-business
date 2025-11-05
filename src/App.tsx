@@ -6,16 +6,16 @@ import { RequestProvider } from './contexts/RequestContext'
 import LoginPage from './pages/LoginPage/LoginPage'
 import ProfilePage from './pages/ProfilePage/ProfilePage'
 import RequestsPage from './pages/RequestsPage/RequestsPage'
+import AllRequestsPage from './pages/AllRequestsPage/AllRequestsPage'
+import RequestsWithOffersPage from './pages/RequestsWithOffersPage/RequestsWithOffersPage'
 import RequestDetailPage from './pages/RequestDetailPage/RequestDetailPage'
 import LoadingSpinner from './components/LoadingSpinner'
-import DebugPanel from './components/DebugPanel'
 
-type AppPage = 'login' | 'profile' | 'request' | 'request-detail'
+type AppPage = 'login' | 'profile' | 'request' | 'all-requests' | 'requests-with-offers' | 'request-detail'
 
 function AppContent() {
-  const { isAuthenticated, isLoading, error } = useAuth()
+  const { isAuthenticated, isLoading } = useAuth()
   const [currentPage, setCurrentPage] = useState<AppPage | null>(null)
-  const [showDebug, setShowDebug] = useState(false)
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null)
 
   // Utility functions for URL management
@@ -108,6 +108,10 @@ function AppContent() {
         // Set initial page based on URL parameter
         if (page === 'request') {
           navigateToPage('request')
+        } else if (page === 'all-requests') {
+          navigateToPage('all-requests')
+        } else if (page === 'requests-with-offers') {
+          navigateToPage('requests-with-offers')
         } else if (page === 'request-detail' && requestId) {
           navigateToPage('request-detail', requestId)
         } else {
@@ -132,17 +136,53 @@ function AppContent() {
       return <LoginPage />
     }
 
+    // Determine active tab based on current page
+    const getActiveTab = (): 'all-requests' | 'requests-with-offers' => {
+      if (currentPage === 'requests-with-offers') {
+        return 'requests-with-offers'
+      }
+      return 'all-requests'
+    }
+
     switch (currentPage) {
       case 'profile':
         return <ProfilePage />
       case 'request':
-        return <RequestsPage onRequestClick={(requestId) => {
-          navigateToPage('request-detail', requestId)
-        }} />
+      case 'all-requests':
+      case 'requests-with-offers': {
+        const activeTab = getActiveTab()
+        return (
+          <div className="requests-container">
+            <RequestsPage 
+              activeTab={activeTab}
+              onNavigateToTab={(tab) => {
+                if (tab === 'all-requests') {
+                  navigateToPage('all-requests')
+                } else {
+                  navigateToPage('requests-with-offers')
+                }
+              }}
+            />
+            {activeTab === 'all-requests' ? (
+              <AllRequestsPage 
+                onRequestClick={(requestId) => {
+                  navigateToPage('request-detail', requestId)
+                }}
+              />
+            ) : (
+              <RequestsWithOffersPage 
+                onRequestClick={(requestId) => {
+                  navigateToPage('request-detail', requestId)
+                }}
+              />
+            )}
+          </div>
+        )
+      }
       case 'request-detail':
         return <RequestDetailPage 
           requestId={selectedRequestId || undefined} 
-          onBack={() => navigateToPage('request')} 
+          onBack={() => navigateToPage('request')}
         />
       default:
         return <LoginPage />

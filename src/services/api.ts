@@ -214,7 +214,7 @@ export const apiService = {
     const token = authService.getToken()
     console.log('🔑 Token for demands request:', token)
     try {
-      const response = await fetch(`${API_BASE_URL}/business-client/business/demands`, {
+      const response = await fetch(`${API_BASE_URL}/business-client/business/demands/without-my-offers`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -241,6 +241,41 @@ export const apiService = {
       return await response.json()
     } catch (error) {
       console.error('Failed to get demands:', error)
+      throw error
+    }
+  },
+
+  async getDemandsWithOffers(): Promise<Demand[]> {
+    const token = authService.getToken()
+    console.log('🔑 Token for demands with offers request:', token)
+    try {
+      const response = await fetch(`${API_BASE_URL}/business-client/business/demands/with-my-offers`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        redirect: 'manual', // Prevent automatic redirects
+      })
+
+      console.log('📡 Demands with offers API response status:', response.status)
+      console.log('📡 Demands with offers API response type:', response.type)
+
+      // Handle redirects manually
+      if (response.type === 'opaqueredirect' || response.status === 302 || response.status === 304) {
+        console.error('🚫 Redirect detected - likely authentication issue')
+        throw new Error('Authentication required - redirect detected')
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('❌ Demands with offers API error:', response.status, errorText)
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error('Failed to get demands with offers:', error)
       throw error
     }
   },
@@ -276,6 +311,50 @@ export const apiService = {
       return await response.json()
     } catch (error) {
       console.error('Failed to get demand:', error)
+      throw error
+    }
+  },
+
+  async makeOffer(data: { demandId: number; price?: number; time?: string; comment?: string }): Promise<any> {
+    const token = authService.getToken()
+    console.log('🔑 Token for make offer request:', token)
+    console.log('💰 Making offer with data:', data)
+    
+    if (!token) {
+      throw new Error('Authentication required. Please log in.')
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/business-client/business/offer`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+        redirect: 'manual', // Prevent automatic redirects
+      })
+
+      console.log('📡 Make offer API response status:', response.status)
+      console.log('📡 Make offer API response type:', response.type)
+
+      // Handle redirects manually
+      if (response.type === 'opaqueredirect' || response.status === 302 || response.status === 304) {
+        console.error('🚫 Redirect detected - likely authentication issue')
+        throw new Error('Authentication required - redirect detected')
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('❌ Make offer API error:', response.status, errorText)
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
+      }
+
+      const result = await response.json()
+      console.log('✅ Offer made successfully:', result)
+      return result
+    } catch (error) {
+      console.error('Failed to make offer:', error)
       throw error
     }
   },

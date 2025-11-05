@@ -17,7 +17,7 @@ interface RequestContextType {
   
   // Actions
   loadRequest: (id: string) => Promise<void>
-  makeOffer: (requestId: string) => Promise<void>
+  makeOffer: (data: { demandId: number; price?: number; time?: string; comment?: string }) => Promise<void>
   ignoreRequest: (requestId: string) => Promise<void>
 }
 
@@ -66,21 +66,19 @@ export const RequestProvider: React.FC<RequestProviderProps> = ({ children }) =>
     }
   }, [])
 
-  const makeOffer = useCallback(async (requestId: string): Promise<void> => {
+  const makeOffer = useCallback(async (data: { demandId: number; price?: number; time?: string; comment?: string }): Promise<void> => {
     try {
-      console.log('💰 Making offer for request:', requestId)
+      console.log('💰 Making offer with data:', data)
       
-      // TODO: Implement make offer API call
-      // await apiService.makeOffer(requestId)
+      await apiService.makeOffer(data)
       
-      // For now, just log the action
-      console.log('✅ Offer made for request:', requestId)
+      console.log('✅ Offer made successfully')
       
       // You could show a success message or navigate somewhere
       // For now, we'll just log it
     } catch (err) {
       console.error('❌ Error making offer:', err)
-      // Error handling removed - just log for now
+      throw err // Re-throw to allow error handling in components
     }
   }, [])
 
