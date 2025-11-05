@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/iwant-tg-business/static/css/main.3d373cea.css",
-    "main.js": "/iwant-tg-business/static/js/main.3a521015.js",
+    "main.css": "/iwant-tg-business/static/css/main.2853231a.css",
+    "main.js": "/iwant-tg-business/static/js/main.535c068d.js",
     "index.html": "/iwant-tg-business/index.html",
-    "main.3d373cea.css.map": "/iwant-tg-business/static/css/main.3d373cea.css.map",
-    "main.3a521015.js.map": "/iwant-tg-business/static/js/main.3a521015.js.map"
+    "main.2853231a.css.map": "/iwant-tg-business/static/css/main.2853231a.css.map",
+    "main.535c068d.js.map": "/iwant-tg-business/static/js/main.535c068d.js.map"
   },
   "entrypoints": [
-    "static/css/main.3d373cea.css",
-    "static/js/main.3a521015.js"
+    "static/css/main.2853231a.css",
+    "static/js/main.535c068d.js"
   ]
 }
