@@ -8,6 +8,7 @@ interface Request {
   status: 'pending' | 'in_progress' | 'completed' | 'cancelled'
   created_at: string
   updated_at: string
+  offer?: Demand['offer']
 }
 
 interface RequestContextType {
@@ -38,7 +39,8 @@ export const RequestProvider: React.FC<RequestProviderProps> = ({ children }) =>
     description: demand.translation || demand.transcription,
     status: 'pending' as const, // API doesn't provide status, defaulting to pending
     created_at: demand.createdAt,
-    updated_at: demand.updatedAt
+    updated_at: demand.updatedAt,
+    offer: demand.offer
   })
 
 
@@ -86,17 +88,12 @@ export const RequestProvider: React.FC<RequestProviderProps> = ({ children }) =>
     try {
       console.log('🚫 Ignoring request:', requestId)
       
-      // TODO: Implement ignore request API call
-      // await apiService.ignoreRequest(requestId)
+      await apiService.ignoreDemand(parseInt(requestId))
       
-      // For now, just log the action
       console.log('✅ Request ignored:', requestId)
-      
-      // You could show a success message or navigate back to requests list
-      // For now, we'll just log it
     } catch (err) {
       console.error('❌ Error ignoring request:', err)
-      // Error handling removed - just log for now
+      throw err
     }
   }, [])
 

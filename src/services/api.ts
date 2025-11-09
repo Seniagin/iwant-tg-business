@@ -346,4 +346,29 @@ export const apiService = {
       throw error
     }
   },
+
+  async ignoreDemand(id: number): Promise<any> {
+    const token = authService.getToken()
+    try {
+      const response = await fetch(`${API_BASE_URL}/business-client/business/demand/ignore`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ demandId: id }),
+        redirect: 'manual', // Prevent automatic redirects
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('❌ Ignore demand API error:', response.status, errorText)
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
+      }
+
+    } catch (error) {
+      console.error('Failed to ignore demand:', error)
+      throw error
+    }
+  }
 }

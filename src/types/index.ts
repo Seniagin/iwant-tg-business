@@ -8,9 +8,9 @@ export interface TelegramAuthDto {
     photo_url?: string
     auth_date: string
     hash: string
-  }
-  
-  export interface ServerAuthResponse {
+}
+
+export interface ServerAuthResponse {
     message: string,
     token: string,
     user: {
@@ -23,16 +23,16 @@ export interface TelegramAuthDto {
         isActive: boolean,
         createdAt: string
     }
-  }
-  
-  export interface Business {
+}
+
+export interface Business {
     id: number
     name: string
     description: string;
     currency: string;
-  }
-  
-  export interface Demand {
+}
+
+export interface Demand {
     id: number
     categoryId: string
     userId: number
@@ -41,7 +41,19 @@ export interface TelegramAuthDto {
     summarizedTranslation: string
     createdAt: string
     updatedAt: string
-  }
+    offer?: {
+        id: number;
+        comment: string;
+        price: number;
+        time: string;
+        isViewed: boolean;
+        demandId: number;
+        businessId: string;
+        createdAt: string;
+        updatedAt: string;
+        status: string;
+    }
+}
   
   export interface User {
     id: number
@@ -52,4 +64,4 @@ export interface TelegramAuthDto {
     authProvider: string
     isActive: boolean
     createdAt: string
-  }
+}

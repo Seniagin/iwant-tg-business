@@ -16,9 +16,6 @@
   font-size: 14px;
 }
 
-.form-section {
-  /* Spacing handled by gap in parent */
-}
 
 .form-label {
   display: block;
@@ -156,7 +153,7 @@
 
   .price-input {
     padding: 10px 50px 10px 14px;
-    font-size: 15px;
+    font-size: 16px; /* Prevent iOS zoom on focus */
   }
 
   .price-currency {
@@ -167,7 +164,7 @@
   .comment-textarea {
     padding: 10px 14px;
     min-height: 80px;
-    font-size: 15px;
+    font-size: 16px; /* Prevent iOS zoom on focus */
   }
 
   .time-options {
