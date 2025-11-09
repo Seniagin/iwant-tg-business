@@ -110,11 +110,13 @@
 .request-info {
   display: flex;
   justify-content: flex-start;
+  align-items: flex-start;
 }
 
 .request-description {
   max-width: 75%;
   position: relative;
+  display: inline-block;
 }
 
 .request-description::before {
@@ -139,6 +141,8 @@
   margin: 0;
   white-space: pre-line;
   word-wrap: break-word;
+  display: block;
+  box-sizing: border-box;
 }
 
 /* Offer Message (sent message style - right side) */
