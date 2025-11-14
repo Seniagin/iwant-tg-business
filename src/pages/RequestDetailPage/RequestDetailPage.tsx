@@ -143,22 +143,27 @@ const RequestDetailPage: React.FC<RequestDetailPageProps> = ({ requestId, onBack
           )}
         </div>
 
-        {/* Offer Form Section */}
-        <OfferForm
-          ref={offerFormRef}
-          error={error}
-        />
+        {/* Offer Form Section - only show if no offer exists */}
+        {!currentRequest.offer && (
+          <OfferForm
+            ref={offerFormRef}
+            error={error}
+          />
+        )}
       </div>
 
-      <div className="bottom-actions">
-        <button
-          className="action-button primary"
-          onClick={handleSubmitOffer}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? 'Submitting...' : 'Submit Offer'}
-        </button>
-      </div>
+      {/* Submit button - only show if no offer exists */}
+      {!currentRequest.offer && (
+        <div className="bottom-actions">
+          <button
+            className="action-button primary"
+            onClick={handleSubmitOffer}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Submitting...' : 'Submit Offer'}
+          </button>
+        </div>
+      )}
 
     </div>
   )
