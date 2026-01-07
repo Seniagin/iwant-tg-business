@@ -30,10 +30,13 @@ export interface Business {
     name: string
     description: string;
     currency: string;
+    location?: string; // PostGIS POINT format: "POINT(longitude latitude)"
+    address?: string;
 }
 
 export interface Demand {
     id: number
+    distance?: number
     categoryId: string
     userId: number
     transcription: string

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { telegramAuth } from '../services/auth'
-import { apiService, User } from '../services/api'
+import { apiService } from '../services/api'
+import { User } from '../types'
 
 interface AuthContextType {
   isAuthenticated: boolean
@@ -41,38 +42,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('❌ Authorization failed:', error)
       
+      // Don't try to refresh - user must click the button to authenticate
+      setIsAuthenticated(false)
+      setUser(null)
       if (error instanceof Error && error.message === 'UNAUTHORIZED') {
-        console.log('🔄 Token expired, attempting to refresh...')
-        try {
-          const refreshResult = await telegramAuth.refreshAuth()
-          if (refreshResult.success) {
-            console.log('✅ Token refreshed successfully')
-            // Try to get user data again after refresh
-            const userData = await apiService.checkAuth()
-            setIsAuthenticated(true)
-            setUser(userData)
-            setError(null)
-            return true
-          } else {
-            console.error('❌ Token refresh failed:', refreshResult.error)
-            setError('Authentication failed. Please try again.')
-            setIsAuthenticated(false)
-            setUser(null)
-            return false
-          }
-        } catch (refreshError) {
-          console.error('❌ Token refresh error:', refreshError)
-          setError('Authentication failed. Please try again.')
-          setIsAuthenticated(false)
-          setUser(null)
-          return false
-        }
+        setError(null) // Clear error for expired tokens, user needs to login again
       } else {
         setError('Authentication failed. Please try again.')
-        setIsAuthenticated(false)
-        setUser(null)
-        return false
       }
+      return false
     }
   }
 
@@ -81,24 +59,45 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsLoading(true)
       setError(null)
       
-      // Check if we already have a token
-      const token = telegramAuth.getToken()
-      if (token) {
-        // Try to authenticate with existing token
-        return await checkAuth()
-      } else {
-        // No token, need to authenticate
-        const authResult = await telegramAuth.auth()
-        if (authResult.success) {
-          // Try to get user data after successful auth
-          return await checkAuth()
-        } else {
-          setError(authResult.error || 'Authentication failed')
-          return false
+      console.log('🔑 Login attempt started')
+      
+      // Always clear any existing token first to force fresh authentication
+      // This ensures we don't use stale/invalid tokens
+      const existingToken = telegramAuth.getToken()
+      if (existingToken) {
+        console.log('🗑️ Clearing existing token to force fresh auth')
+        telegramAuth.clearToken()
+      }
+      
+      // Always authenticate with Telegram first
+      console.log('📞 Calling telegramAuth.auth()...')
+      const authResult = await telegramAuth.auth()
+      
+      if (authResult.success) {
+        console.log('✅ Telegram auth successful, fetching user data...')
+        // After successful auth, directly fetch user data using the token
+        // Don't use checkAuth() here as it might try to refresh if there's an issue
+        try {
+          const userData = await apiService.checkAuth()
+          setIsAuthenticated(true)
+          setUser(userData)
+          setError(null)
+          return true
+        } catch (checkError) {
+          console.error('❌ Failed to fetch user data after auth:', checkError)
+          // Even if checkAuth fails, we have a valid token, so mark as authenticated
+          // The user data will be fetched on next check
+          setIsAuthenticated(true)
+          setError('Authentication successful but failed to load user data. Please refresh.')
+          return true
         }
+      } else {
+        console.error('❌ Telegram auth failed:', authResult.error)
+        setError(authResult.error || 'Authentication failed')
+        return false
       }
     } catch (error) {
-      console.error('Login error:', error)
+      console.error('❌ Login error:', error)
       setError('Login failed. Please try again.')
       return false
     } finally {

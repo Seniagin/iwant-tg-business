@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import './ProfilePage.css'
 import { apiService } from '../../services/api'
 import { useUser } from '../../contexts/UserContext'
+import LocationPicker from '../../components/LocationPicker/LocationPicker'
+import { parsePointString, formatPointString, Location } from '../../utils/location'
 
 const ProfilePage: React.FC = () => {
   const { isAuthenticated, user, isLoading, business, businessLoading, refreshBusiness } = useUser()
@@ -9,6 +11,8 @@ const ProfilePage: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false)
   const [currency, setCurrency] = useState('')
   const [currencies, setCurrencies] = useState<string[]>([])
+  const [showLocationPicker, setShowLocationPicker] = useState(false)
+  const [location, setLocation] = useState<Location | null>(null)
 
   useEffect(() => {
     (async () => {
@@ -25,6 +29,16 @@ const ProfilePage: React.FC = () => {
     if (business) {
       setDescription(business.description)
       setCurrency(business.currency)
+      // Parse location from POINT string format
+      const parsedLocation = parsePointString(business.location)
+      if (parsedLocation) {
+        setLocation({
+          ...parsedLocation,
+          address: business.address,
+        })
+      } else {
+        setLocation(null)
+      }
     }
   }, [business])
 
@@ -42,6 +56,18 @@ const ProfilePage: React.FC = () => {
     } catch (error) {
       console.error('Failed to update currency:', error)
       // Optionally show error message to user
+    }
+  }
+
+  const handleLocationSelect = async (selectedLocation: Location | null) => {
+    try {
+      // Format location to POINT string for backend
+      const pointString = formatPointString(selectedLocation)
+      await apiService.updateBusinessLocation(pointString, selectedLocation?.address)
+      setLocation(selectedLocation)
+      await refreshBusiness()
+    } catch (error) {
+      console.error('Failed to update location:', error)
     }
   }
 
@@ -138,6 +164,51 @@ const ProfilePage: React.FC = () => {
         </div>
       )}
 
+      {business && (
+        <div className="activity-section">
+          <div className="section-header">
+            <h3>Location</h3>
+            <button
+              className="edit-button"
+              onClick={() => setShowLocationPicker(true)}
+            >
+              {location ? 'Change' : 'Set Location'}
+            </button>
+          </div>
+          <div className="location-display">
+            {location ? (
+              <div className="location-info">
+                <p>
+                  <strong>Coordinates:</strong> {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+                </p>
+                {location.address && (
+                  <p>
+                    <strong>Address:</strong> {location.address}
+                  </p>
+                )}
+                <button
+                  className="btn btn-secondary btn-small"
+                  onClick={() => handleLocationSelect(null)}
+                >
+                  Clear Location
+                </button>
+              </div>
+            ) : (
+              <p className="placeholder-text">
+                No location set. Click "Set Location" to add one.
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {showLocationPicker && (
+        <LocationPicker
+          initialLocation={location}
+          onLocationSelect={handleLocationSelect}
+          onClose={() => setShowLocationPicker(false)}
+        />
+      )}
     </div>
   )
 }

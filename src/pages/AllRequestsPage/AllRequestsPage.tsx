@@ -7,6 +7,7 @@ interface Request {
   id: string
   title: string
   description: string
+  distanceInKilometers: string | null
   status: 'pending' | 'in_progress' | 'completed' | 'cancelled'
   created_at: string
   updated_at: string
@@ -25,24 +26,25 @@ const AllRequestsPage: React.FC<AllRequestsPageProps> = ({ onRequestClick }) => 
     try {
       setLoading(true)
       setError(null)
-      
+
       // Fetch demands without offers from API
       const demands = await apiService.getDemands()
-      
+
       // Transform API data to match our Request interface
       const transformedRequests: Request[] = demands.map((demand: Demand) => ({
         id: demand.id.toString(),
         title: demand.summarizedTranslation || demand.translation || demand.transcription,
         description: demand.translation || demand.transcription,
+        distanceInKilometers: demand.distance ? demand.distance.toFixed(2) : null,
         status: 'pending' as const, // API doesn't provide status, defaulting to pending
         created_at: demand.createdAt,
         updated_at: demand.updatedAt
       }))
-      
+
       setRequests(transformedRequests)
     } catch (err) {
       console.error('Error loading requests:', err)
-      
+
       // Handle specific error types
       if (err instanceof Error) {
         if (err.message.includes('Authentication required')) {
@@ -159,6 +161,11 @@ const AllRequestsPage: React.FC<AllRequestsPageProps> = ({ onRequestClick }) => 
               </div>
               <p className="request-description">{request.description}</p>
               <div className="request-meta">
+                {request.distanceInKilometers && (
+                  <span className="request-distance">
+                    Distance: {request.distanceInKilometers} km
+                  </span>
+                )}
                 <span className="request-date">
                   Created: {formatDate(request.created_at)}
                 </span>

@@ -179,6 +179,11 @@
   gap: 4px;
 }
 
+.request-distance {
+  font-size: 12px;
+  color: var(--tg-theme-hint-color, #6c757d);
+}
+
 .request-date,
 .request-updated {
   font-size: 12px;

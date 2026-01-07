@@ -370,5 +370,34 @@ export const apiService = {
       console.error('Failed to ignore demand:', error)
       throw error
     }
+  },
+
+  async updateBusinessLocation(location: string | null, address?: string): Promise<any> {
+    const token = authService.getToken()
+    try {
+      const response = await fetch(`${API_BASE_URL}/business-client/business/location`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(location ? {
+          location: location, // PostGIS POINT format: "POINT(longitude latitude)"
+          address: address,
+        } : null),
+        redirect: 'manual', // Prevent automatic redirects
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('❌ Update business location API error:', response.status, errorText)
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error('Failed to update business location:', error)
+      throw error
+    }
   }
 }

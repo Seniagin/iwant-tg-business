@@ -61,8 +61,31 @@ class AuthService {
 
   public async auth(): Promise<AuthResponse> {
     try {
-      const initDataRaw = retrieveRawInitData()
+      console.log('🔐 Starting Telegram authentication...')
+      
+      // Retrieve init data from Telegram WebApp
+      let initDataRaw: string | null = null
+      try {
+        const rawData = retrieveRawInitData()
+        initDataRaw = rawData ?? null
+        console.log('📦 Init data retrieved:', initDataRaw ? 'present' : 'missing')
+      } catch (initError) {
+        console.error('❌ Failed to retrieve init data:', initError)
+        return {
+          success: false,
+          error: 'Failed to retrieve Telegram authentication data. Please make sure you are opening this app from Telegram.'
+        }
+      }
 
+      if (!initDataRaw || initDataRaw.trim() === '') {
+        console.error('❌ Init data is empty or missing')
+        return {
+          success: false,
+          error: 'Telegram authentication data is missing. Please make sure you are opening this app from Telegram.'
+        }
+      }
+
+      console.log('📤 Sending auth request to backend...')
       const response = await fetch(`${API_BASE_URL}/business-client/telegram-auth`, {
         method: 'POST',
         headers: {
@@ -70,6 +93,8 @@ class AuthService {
           'Authorization': `tma ${initDataRaw}`,
         },
       })
+
+      console.log('📥 Auth response status:', response.status)
 
       if (!response.ok) {
         const errorText = await response.text()
@@ -81,9 +106,11 @@ class AuthService {
       }
 
       const authResult:AuthResponse = await response.json()
+      console.log('✅ Auth result:', authResult.success ? 'success' : 'failed')
 
       if (authResult.success && authResult?.token) {
         this.setToken(authResult.token)
+        console.log('💾 Token saved to localStorage')
         return {
           success: true,
           user: authResult.user,
