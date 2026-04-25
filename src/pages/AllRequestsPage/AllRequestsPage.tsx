@@ -8,7 +8,6 @@ interface Request {
   title: string
   description: string
   distanceInKilometers: string | null
-  status: 'pending' | 'in_progress' | 'completed' | 'cancelled'
   created_at: string
   updated_at: string
 }
@@ -36,7 +35,6 @@ const AllRequestsPage: React.FC<AllRequestsPageProps> = ({ onRequestClick }) => 
         title: demand.summarizedTranslation || demand.translation || demand.transcription,
         description: demand.translation || demand.transcription,
         distanceInKilometers: demand.distance ? demand.distance.toFixed(2) : null,
-        status: 'pending' as const, // API doesn't provide status, defaulting to pending
         created_at: demand.createdAt,
         updated_at: demand.updatedAt
       }))
@@ -71,36 +69,6 @@ const AllRequestsPage: React.FC<AllRequestsPageProps> = ({ onRequestClick }) => 
   useEffect(() => {
     loadRequests()
   }, [loadRequests])
-
-  const getStatusColor = (status: Request['status']) => {
-    switch (status) {
-      case 'pending':
-        return '#ffa500'
-      case 'in_progress':
-        return '#007bff'
-      case 'completed':
-        return '#28a745'
-      case 'cancelled':
-        return '#dc3545'
-      default:
-        return '#6c757d'
-    }
-  }
-
-  const getStatusText = (status: Request['status']) => {
-    switch (status) {
-      case 'pending':
-        return 'Pending'
-      case 'in_progress':
-        return 'In Progress'
-      case 'completed':
-        return 'Completed'
-      case 'cancelled':
-        return 'Cancelled'
-      default:
-        return 'Unknown'
-    }
-  }
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {

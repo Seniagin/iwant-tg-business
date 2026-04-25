@@ -1,0 +1,48 @@
+.app-main-nav {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 12px;
+  padding: 10px 16px;
+  padding-top: max(10px, env(safe-area-inset-top, 0px));
+  background-color: var(--tg-theme-header-bg-color, var(--tg-theme-bg-color, #ffffff));
+  border-bottom: 1px solid var(--tg-theme-section-separator-color, #e9ecef);
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+}
+
+.app-main-nav__btn {
+  flex: 1;
+  max-width: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 12px 10px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--tg-theme-hint-color, #888888);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app-main-nav__btn--active {
+  background-color: var(--tg-theme-secondary-bg-color, #f0f2f5);
+  color: var(--tg-theme-button-color, #2481cc);
+}
+
+.app-main-nav__btn:active {
+  opacity: 0.88;
+}
+
+.app-main-nav__icon {
+  flex-shrink: 0;
+}

@@ -1,403 +1,201 @@
 // API service for external backend communication
-import { Business, Demand, User } from '../types'
+import { Business, BusinessContactsPayload, Demand, MeResponse, MeUser } from '../types'
 import authService from './auth'
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000'
 
-// Debug environment variables
 console.log('🔧 Environment Debug:')
 console.log('  - REACT_APP_API_BASE_URL:', process.env.REACT_APP_API_BASE_URL)
 console.log('  - Final API_BASE_URL:', API_BASE_URL)
 
+type ApiRequestOptions = {
+  method?: string
+  body?: unknown
+  /** Defaults to current auth token */
+  token?: string | null
+  /** Log tag for errors (e.g. "Business API") */
+  errorLabel: string
+  /** Map 401 → UNAUTHORIZED, 403 → FORBIDDEN (for /me-style checks) */
+  mapAuthStatuses?: boolean
+  /** Throw if token is missing (before fetch) */
+  requireToken?: boolean
+  /** Message when `requireToken` and token is missing */
+  noTokenMessage?: string
+}
+
+function bearerHeaders(token: string | null): HeadersInit {
+  return {
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
+  }
+}
+
+async function ensureResponseOk(
+  response: Response,
+  errorLabel: string,
+  mapAuthStatuses?: boolean,
+): Promise<void> {
+  if (response.type === 'opaqueredirect' || response.status === 302 || response.status === 304) {
+    console.error('🚫 Redirect detected - likely authentication issue')
+    throw new Error('Authentication required - redirect detected')
+  }
+
+  if (response.ok) return
+
+  const errorText = await response.text()
+  console.error(`❌ ${errorLabel}:`, response.status, errorText)
+
+  if (mapAuthStatuses) {
+    if (response.status === 401) throw new Error('UNAUTHORIZED')
+    if (response.status === 403) throw new Error('FORBIDDEN')
+  }
+
+  throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
+}
+
+async function apiRequest(path: string, options: ApiRequestOptions): Promise<Response> {
+  const token = options.token !== undefined ? options.token : authService.getToken()
+
+  if (options.requireToken && !token) {
+    throw new Error(options.errorLabel.includes('offer') ? 'Authentication required. Please log in.' : 'No token available')
+  }
+
+  const init: RequestInit = {
+    method: options.method ?? 'GET',
+    headers: bearerHeaders(token),
+    redirect: 'manual',
+  }
+
+  if (options.body !== undefined) {
+    init.body = JSON.stringify(options.body)
+  }
+
+  return fetch(`${API_BASE_URL}${path}`, init)
+}
+
+async function apiJson<T>(path: string, options: ApiRequestOptions): Promise<T> {
+  const response = await apiRequest(path, options)
+  await ensureResponseOk(response, options.errorLabel, options.mapAuthStatuses)
+  return (await response.json()) as T
+}
+
+/** For endpoints that may return an empty body on success */
+async function apiJsonOrEmpty<T>(path: string, options: ApiRequestOptions): Promise<T | undefined> {
+  const response = await apiRequest(path, options)
+  await ensureResponseOk(response, options.errorLabel, options.mapAuthStatuses)
+  const text = await response.text()
+  if (!text.trim()) return undefined
+  return JSON.parse(text) as T
+}
 
 export const apiService = {
-  async checkAuth(): Promise<User> {
-    const token = authService.getToken()
-    
-    if (!token) {
-      throw new Error('No token available')
-    }
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/business-client/me`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        redirect: 'manual', // Prevent automatic redirects
-      })
-
-      // Handle redirects manually
-      if (response.type === 'opaqueredirect' || response.status === 302 || response.status === 304) {
-        console.error('🚫 Redirect detected during auth check - likely authentication issue')
-        throw new Error('Authentication required - redirect detected')
-      }
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error('❌ Auth check failed:', response.status, errorText)
-        
-        if (response.status === 401) {
-          throw new Error('UNAUTHORIZED')
-        } else if (response.status === 403) {
-          throw new Error('FORBIDDEN')
-        } else {
-          throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
-        }
-      }
-
-      const user = await response.json()
-      return user
-    } catch (error) {
-      console.error('Failed to check authorization:', error)
-      throw error
-    }
+  async checkAuth(): Promise<MeUser> {
+    const response = await apiRequest('/business-client/me', {
+      errorLabel: 'Auth check (/me)',
+      mapAuthStatuses: true,
+      requireToken: true,
+    })
+    await ensureResponseOk(response, 'Auth check (/me)', true)
+    const data: MeResponse | MeUser = await response.json()
+    return 'user' in data && data.user ? data.user : (data as MeUser)
   },
 
   async getBusiness(): Promise<Business> {
-    const token = authService.getToken();
-    console.log('🔑 Token for business request:', token)
-    try {
-      const response = await fetch(`${API_BASE_URL}/business-client/business`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        redirect: 'manual', // Prevent automatic redirects
-      })
-
-      console.log('📡 Business API response status:', response.status)
-      console.log('📡 Business API response type:', response.type)
-
-      // Handle redirects manually
-      if (response.type === 'opaqueredirect' || response.status === 302 || response.status === 304) {
-        console.error('🚫 Redirect detected - likely authentication issue')
-        throw new Error('Authentication required - redirect detected')
-      }
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error('❌ Business API error:', response.status, errorText)
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Failed to get business:', error)
-      throw error
-    }
+    return apiJson<Business>('/business-client/business', { errorLabel: 'Business API' })
   },
 
   async getActivityDescription(): Promise<any> {
-    const token = authService.getToken()
-    try {
-      const response = await fetch(`${API_BASE_URL}/user/activity`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        redirect: 'manual', // Prevent automatic redirects
-      })
-
-      // Handle redirects manually
-      if (response.type === 'opaqueredirect' || response.status === 302 || response.status === 304) {
-        console.error('🚫 Redirect detected - likely authentication issue')
-        throw new Error('Authentication required - redirect detected')
-      }
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error('❌ Activity API error:', response.status, errorText)
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
-      }
-
-      return await response.json()
-    } catch (error) {
-      console.error('Failed to get activity description:', error)
-      throw error
-    }
+    return apiJson('/user/activity', { errorLabel: 'Activity API' })
   },
 
   async updateActivityDescription(description: string): Promise<any> {
-    const token = authService.getToken()
-    try {
-      const response = await fetch(`${API_BASE_URL}/business-client/business`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ description }),
-        redirect: 'manual', // Prevent automatic redirects
-      })
+    return apiJson('/business-client/business', {
+      method: 'PUT',
+      body: { description },
+      errorLabel: 'Update activity description',
+    })
+  },
 
-      // Handle redirects manually
-      if (response.type === 'opaqueredirect' || response.status === 302 || response.status === 304) {
-        console.error('🚫 Redirect detected - likely authentication issue')
-        throw new Error('Authentication required - redirect detected')
-      }
+  async updateBusinessName(name: string): Promise<any> {
+    return apiJson('/business-client/business', {
+      method: 'PUT',
+      body: { name },
+      errorLabel: 'Update business name',
+    })
+  },
 
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error('❌ Update API error:', response.status, errorText)
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
-      }
-
-      return await response.json()
-    } catch (error) {
-      console.error('Failed to update activity description:', error)
-      throw error
-    }
+  async updateBusinessContacts(payload: BusinessContactsPayload): Promise<unknown> {
+    return apiJson('/business-client/business/contacts', {
+      method: 'PUT',
+      body: payload,
+      errorLabel: 'Update business contacts',
+    })
   },
 
   async getDemands(): Promise<Demand[]> {
-    const token = authService.getToken()
-    console.log('🔑 Token for demands request:', token)
-    try {
-      const response = await fetch(`${API_BASE_URL}/business-client/business/demands/without-my-offers`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        redirect: 'manual', // Prevent automatic redirects
-      })
-
-      console.log('📡 Demands API response status:', response.status)
-      console.log('📡 Demands API response type:', response.type)
-
-      // Handle redirects manually
-      if (response.type === 'opaqueredirect' || response.status === 302 || response.status === 304) {
-        console.error('🚫 Redirect detected - likely authentication issue')
-        throw new Error('Authentication required - redirect detected')
-      }
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error('❌ Demands API error:', response.status, errorText)
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
-      }
-
-      return await response.json()
-    } catch (error) {
-      console.error('Failed to get demands:', error)
-      throw error
-    }
+    return apiJson<Demand[]>('/business-client/business/demands/without-my-offers', {
+      errorLabel: 'Demands API',
+    })
   },
 
   async getDemandsWithOffers(): Promise<Demand[]> {
-    const token = authService.getToken()
-    console.log('🔑 Token for demands with offers request:', token)
-    try {
-      const response = await fetch(`${API_BASE_URL}/business-client/business/demands/with-my-offers`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        redirect: 'manual', // Prevent automatic redirects
-      })
-
-      console.log('📡 Demands with offers API response status:', response.status)
-      console.log('📡 Demands with offers API response type:', response.type)
-
-      // Handle redirects manually
-      if (response.type === 'opaqueredirect' || response.status === 302 || response.status === 304) {
-        console.error('🚫 Redirect detected - likely authentication issue')
-        throw new Error('Authentication required - redirect detected')
-      }
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error('❌ Demands with offers API error:', response.status, errorText)
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
-      }
-
-      return await response.json()
-    } catch (error) {
-      console.error('Failed to get demands with offers:', error)
-      throw error
-    }
+    return apiJson<Demand[]>('/business-client/business/demands/with-my-offers', {
+      errorLabel: 'Demands with offers API',
+    })
   },
 
   async getDemand(id: number): Promise<Demand> {
-    const token = authService.getToken()
-    console.log('🔑 Token for demand request:', token, 'ID:', id)
-    try {
-      const response = await fetch(`${API_BASE_URL}/business-client/business/demand/${id}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        redirect: 'manual', // Prevent automatic redirects
-      })
-
-      console.log('📡 Demand API response status:', response.status)
-      console.log('📡 Demand API response type:', response.type)
-
-      // Handle redirects manually
-      if (response.type === 'opaqueredirect' || response.status === 302 || response.status === 304) {
-        console.error('🚫 Redirect detected - likely authentication issue')
-        throw new Error('Authentication required - redirect detected')
-      }
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error('❌ Demand API error:', response.status, errorText)
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
-      }
-
-      return await response.json()
-    } catch (error) {
-      console.error('Failed to get demand:', error)
-      throw error
-    }
+    return apiJson<Demand>(`/business-client/business/demand/${id}`, {
+      errorLabel: 'Demand API',
+    })
   },
 
   async makeOffer(data: { demandId: number; price?: number; time?: string; comment?: string }): Promise<any> {
-    const token = authService.getToken()
-    console.log('🔑 Token for make offer request:', token)
-    console.log('💰 Making offer with data:', data)
-    
-    if (!token) {
-      throw new Error('Authentication required. Please log in.')
-    }
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/business-client/business/offer`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-        redirect: 'manual', // Prevent automatic redirects
-      })
-
-      console.log('📡 Make offer API response status:', response.status)
-      console.log('📡 Make offer API response type:', response.type)
-
-      // Handle redirects manually
-      if (response.type === 'opaqueredirect' || response.status === 302 || response.status === 304) {
-        console.error('🚫 Redirect detected - likely authentication issue')
-        throw new Error('Authentication required - redirect detected')
-      }
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error('❌ Make offer API error:', response.status, errorText)
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
-      }
-
-      const result = await response.json()
-      console.log('✅ Offer made successfully:', result)
-      return result
-    } catch (error) {
-      console.error('Failed to make offer:', error)
-      throw error
-    }
+    return apiJson('/business-client/business/offer', {
+      method: 'POST',
+      body: data,
+      errorLabel: 'Make offer API',
+      requireToken: true,
+      noTokenMessage: 'Authentication required. Please log in.',
+    })
   },
 
   async getAvailableCurrenciesList(): Promise<string[]> {
-    const token = authService.getToken()
-    try {
-      const response = await fetch(`${API_BASE_URL}/business-client/manage/currencies/list`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        redirect: 'manual', // Prevent automatic redirects
-      })
-
-      return await response.json()
-    } catch (error) {
-      console.error('Failed to get available currencies list:', error)
-      throw error
-    }
+    return apiJson<string[]>('/business-client/manage/currencies/list', {
+      errorLabel: 'Currencies list API',
+    })
   },
 
   async updateBusinessCurrency(currency: string): Promise<any> {
-    const token = authService.getToken()
-    try {
-      const response = await fetch(`${API_BASE_URL}/business-client/manage/currency/set-default`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ currency }),
-        redirect: 'manual', // Prevent automatic redirects
-      })
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error('❌ Update business currency API error:', response.status, errorText)
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
-      }
-
-      return await response.json()
-    } catch (error) {
-      console.error('Failed to update business currency:', error)
-      throw error
-    }
+    return apiJson('/business-client/manage/currency/set-default', {
+      method: 'POST',
+      body: { currency },
+      errorLabel: 'Update business currency API',
+    })
   },
 
   async ignoreDemand(id: number): Promise<any> {
-    const token = authService.getToken()
-    try {
-      const response = await fetch(`${API_BASE_URL}/business-client/business/demand/ignore`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ demandId: id }),
-        redirect: 'manual', // Prevent automatic redirects
-      })
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error('❌ Ignore demand API error:', response.status, errorText)
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
-      }
-
-    } catch (error) {
-      console.error('Failed to ignore demand:', error)
-      throw error
-    }
+    return apiJsonOrEmpty('/business-client/business/demand/ignore', {
+      method: 'POST',
+      body: { demandId: id },
+      errorLabel: 'Ignore demand API',
+    })
   },
 
-  async updateBusinessLocation(location: string | null, address?: string): Promise<any> {
-    const token = authService.getToken()
-    try {
-      const response = await fetch(`${API_BASE_URL}/business-client/business/location`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(location ? {
-          location: location, // PostGIS POINT format: "POINT(longitude latitude)"
-          address: address,
-        } : null),
-        redirect: 'manual', // Prevent automatic redirects
-      })
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error('❌ Update business location API error:', response.status, errorText)
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
-      }
-
-      return await response.json()
-    } catch (error) {
-      console.error('Failed to update business location:', error)
-      throw error
-    }
-  }
+  async updateBusinessLocation(
+    location: { latitude: number; longitude: number } | null,
+    address?: string,
+  ): Promise<any> {
+    return apiJson('/business-client/business/location', {
+      method: 'PUT',
+      body: location
+        ? {
+            latitude: location.latitude,
+            longitude: location.longitude,
+            address,
+          }
+        : null,
+      errorLabel: 'Update business location API',
+    })
+  },
 }

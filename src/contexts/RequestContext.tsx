@@ -6,7 +6,6 @@ interface Request {
   id: string
   title: string
   description: string
-  status: 'pending' | 'in_progress' | 'completed' | 'cancelled'
   created_at: string
   updated_at: string
   offer?: Demand['offer']
@@ -38,7 +37,6 @@ export const RequestProvider: React.FC<RequestProviderProps> = ({ children }) =>
     id: demand.id.toString(),
     title: demand.summarizedTranslation || demand.translation || demand.transcription,
     description: demand.translation || demand.transcription,
-    status: 'pending' as const, // API doesn't provide status, defaulting to pending
     created_at: demand.createdAt,
     updated_at: demand.updatedAt,
     offer: demand.offer

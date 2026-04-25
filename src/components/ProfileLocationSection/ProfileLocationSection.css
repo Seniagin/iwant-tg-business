@@ -1,0 +1,42 @@
+.profile-location-section__display {
+  padding: 16px;
+  background-color: var(--tg-theme-bg-color, #ffffff);
+  border-radius: 12px;
+  border: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+}
+
+.profile-location-section__body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.profile-location-section__body p {
+  color: var(--tg-theme-text-color, #000000);
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.profile-location-section__place {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--tg-theme-text-color, #000000);
+}
+
+.profile-location-section__coords {
+  margin: 0 0 12px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--tg-theme-hint-color, #888888);
+  font-variant-numeric: tabular-nums;
+}
+
+.profile-location-section__clear {
+  padding: 6px 12px;
+  font-size: 14px;
+  margin-top: 8px;
+  align-self: flex-start;
+}

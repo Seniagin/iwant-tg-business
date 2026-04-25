@@ -10,8 +10,19 @@ import AllRequestsPage from './pages/AllRequestsPage/AllRequestsPage'
 import RequestsWithOffersPage from './pages/RequestsWithOffersPage/RequestsWithOffersPage'
 import RequestDetailPage from './pages/RequestDetailPage/RequestDetailPage'
 import LoadingSpinner from './components/LoadingSpinner'
+import AppMainNav from './components/AppMainNav/AppMainNav'
+import './components/AppShell/AppShell.css'
 
 type AppPage = 'login' | 'profile' | 'request' | 'all-requests' | 'requests-with-offers' | 'request-detail'
+
+function isRequestsFlowPage(page: AppPage): boolean {
+  return (
+    page === 'request' ||
+    page === 'all-requests' ||
+    page === 'requests-with-offers' ||
+    page === 'request-detail'
+  )
+}
 
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth()
@@ -35,8 +46,10 @@ function AppContent() {
 
   const navigateToPage = (page: AppPage, requestId?: string) => {
     setCurrentPage(page)
-    if (requestId) {
+    if (requestId !== undefined) {
       setSelectedRequestId(requestId)
+    } else {
+      setSelectedRequestId(null)
     }
     updateURL(page, requestId)
   }
@@ -50,12 +63,8 @@ function AppContent() {
       const requestId = urlParams.get('request_id')
       
       if (page) {
-        setCurrentPage(page)
-        if (requestId) {
-          setSelectedRequestId(requestId)
-        } else {
-          setSelectedRequestId(null)
-        }
+        setCurrentPage(page as AppPage)
+        setSelectedRequestId(requestId || null)
       }
     }
 
@@ -131,11 +140,7 @@ function AppContent() {
     return <LoadingSpinner />
   }
 
-  const renderCurrentPage = () => {
-    if (!isAuthenticated) {
-      return <LoginPage />
-    }
-
+  const renderAuthenticatedContent = () => {
     // Determine active tab based on current page
     const getActiveTab = (): 'all-requests' | 'requests-with-offers' => {
       if (currentPage === 'requests-with-offers') {
@@ -185,14 +190,31 @@ function AppContent() {
           onBack={() => navigateToPage('request')}
         />
       default:
-        return <LoginPage />
+        return <ProfilePage />
     }
   }
 
   console.log('Rendering main app content')
+
+  if (!isAuthenticated) {
+    return (
+      <div className="App">
+        <LoginPage />
+      </div>
+    )
+  }
+
   return (
     <div className="App">
-      {renderCurrentPage()}
+      <div className="app-shell">
+        <AppMainNav
+          profileActive={currentPage === 'profile'}
+          requestsActive={isRequestsFlowPage(currentPage)}
+          onProfile={() => navigateToPage('profile')}
+          onRequests={() => navigateToPage('all-requests')}
+        />
+        <main className="app-shell__main">{renderAuthenticatedContent()}</main>
+      </div>
     </div>
   )
 }

@@ -12,11 +12,6 @@ const RequestsPage: React.FC<RequestsPageProps> = ({ activeTab = 'all-requests',
 
   return (
     <div className="requests-page">
-      <div className="requests-header">
-        <h1>Requests</h1>
-        <p>Browse all requests and manage your offers</p>
-      </div>
-
       <div className="tabs-container">
         <button
           className={`tab-button ${activeTab === 'all-requests' ? 'active' : ''}`}

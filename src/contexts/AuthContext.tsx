@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { telegramAuth } from '../services/auth'
 import { apiService } from '../services/api'
-import { User } from '../types'
+import { MeUser } from '../types'
 
 interface AuthContextType {
   isAuthenticated: boolean
   isLoading: boolean
-  user: User | null
+  user: MeUser | null
   error: string | null
   checkAuth: () => Promise<boolean>
   login: () => Promise<boolean>
@@ -23,7 +23,7 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<MeUser | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const clearError = () => {
