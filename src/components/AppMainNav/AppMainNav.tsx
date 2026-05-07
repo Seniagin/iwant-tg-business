@@ -1,40 +1,56 @@
 import React from 'react'
-import { User, ClipboardList } from 'lucide-react'
 import './AppMainNav.css'
 
+type TabType = 'all-requests' | 'requests-with-offers'
+
 export interface AppMainNavProps {
-  profileActive: boolean
-  requestsActive: boolean
-  onProfile: () => void
-  onRequests: () => void
+  activeTab?: TabType
+  showTabs?: boolean
+  onNavigateToTab: (tab: TabType) => void
+  onOpenProfile: () => void
+  userInitials: string
 }
 
 const AppMainNav: React.FC<AppMainNavProps> = ({
-  profileActive,
-  requestsActive,
-  onProfile,
-  onRequests,
+  activeTab = 'all-requests',
+  showTabs = true,
+  onNavigateToTab,
+  onOpenProfile,
+  userInitials,
 }) => {
   return (
-    <header className="app-main-nav" role="navigation" aria-label="Main">
-      <button
-        type="button"
-        className={`app-main-nav__btn${profileActive ? ' app-main-nav__btn--active' : ''}`}
-        onClick={onProfile}
-        aria-current={profileActive ? 'page' : undefined}
-      >
-        <User className="app-main-nav__icon" size={24} strokeWidth={2} aria-hidden />
-        <span>Profile</span>
-      </button>
-      <button
-        type="button"
-        className={`app-main-nav__btn${requestsActive ? ' app-main-nav__btn--active' : ''}`}
-        onClick={onRequests}
-        aria-current={requestsActive ? 'page' : undefined}
-      >
-        <ClipboardList className="app-main-nav__icon" size={24} strokeWidth={2} aria-hidden />
-        <span>Requests</span>
-      </button>
+    <header className="app-main-nav" role="banner">
+      <div className="app-main-nav__top-row">
+        <span className="app-main-nav__title">I can</span>
+        <button
+          className="app-main-nav__avatar-btn"
+          onClick={onOpenProfile}
+          aria-label="Open profile settings"
+        >
+          {userInitials}
+        </button>
+      </div>
+
+      {showTabs && (
+        <div className="app-main-nav__tabs" role="tablist">
+          <button
+            role="tab"
+            aria-selected={activeTab === 'all-requests'}
+            className={`app-main-nav__tab${activeTab === 'all-requests' ? ' app-main-nav__tab--active' : ''}`}
+            onClick={() => onNavigateToTab('all-requests')}
+          >
+            Active Requests
+          </button>
+          <button
+            role="tab"
+            aria-selected={activeTab === 'requests-with-offers'}
+            className={`app-main-nav__tab${activeTab === 'requests-with-offers' ? ' app-main-nav__tab--active' : ''}`}
+            onClick={() => onNavigateToTab('requests-with-offers')}
+          >
+            My Offers
+          </button>
+        </div>
+      )}
     </header>
   )
 }

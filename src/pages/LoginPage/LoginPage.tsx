@@ -14,9 +14,6 @@ const LoginPage: React.FC = () => {
     await login()
   }
 
-  // Demo mode - show login button even if not in Telegram
-  const isDemoMode = !WebApp.initDataUnsafe?.user
-
   if (isLoading) {
     return (
       <div className="login-container">
@@ -50,15 +47,15 @@ const LoginPage: React.FC = () => {
                 />
               ) : (
                 <div className="avatar-placeholder">
-                  {WebApp.initDataUnsafe?.user?.first_name?.[0] || 'D'}
+                  {WebApp.initDataUnsafe?.user?.first_name?.[0]}
                 </div>
               )}
             </div>
             <div className="user-details">
               <h3>
-                {WebApp.initDataUnsafe?.user?.first_name || 'Demo'} {WebApp.initDataUnsafe?.user?.last_name || 'User'}
+                {WebApp.initDataUnsafe?.user?.first_name} {WebApp.initDataUnsafe?.user?.last_name}
               </h3>
-              <p>@{WebApp.initDataUnsafe?.user?.username || 'demo_user'}</p>
+              <p>@{WebApp.initDataUnsafe?.user?.username}</p>
             </div>
           </div>
           
@@ -66,7 +63,7 @@ const LoginPage: React.FC = () => {
             className="btn btn-primary login-button"
             onClick={handleLogin}
           >
-            {isDemoMode ? 'Start Demo' : 'Continue with Telegram'}
+            Continue with Telegram
           </button>
         </div>
       </div>

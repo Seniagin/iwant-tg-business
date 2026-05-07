@@ -40,12 +40,6 @@ const ProfileLocationSection: React.FC = () => {
   return (
     <>
       <div className="activity-section profile-location-section">
-        <div className="section-header">
-          <h3>Location</h3>
-          <button type="button" className="edit-button" onClick={() => setPickerOpen(true)}>
-            {location ? 'Change' : 'Set Location'}
-          </button>
-        </div>
         <div className="profile-location-section__display">
           {location ? (
             <div className="profile-location-section__body">
@@ -61,16 +55,20 @@ const ProfileLocationSection: React.FC = () => {
               </p>
               <button
                 type="button"
-                className="btn btn-secondary profile-location-section__clear"
-                onClick={() => persistLocation(null)}
+                className="profile-location-section__change-btn"
+                onClick={() => setPickerOpen(true)}
               >
-                Clear Location
+                Change location
               </button>
             </div>
           ) : (
-            <p className="placeholder-text">
-              No location set. Click &quot;Set Location&quot; to add one.
-            </p>
+            <button
+              type="button"
+              className="profile-location-section__change-btn"
+              onClick={() => setPickerOpen(true)}
+            >
+              Set location
+            </button>
           )}
         </div>
       </div>

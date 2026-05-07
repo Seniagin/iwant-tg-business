@@ -25,8 +25,8 @@ const OfferForm = forwardRef<OfferFormHandle, OfferFormProps>(({ error }, ref) =
 
   const timeOptions = [
     { value: 'TODAY' as const, label: 'Today', icon: '⚡' },
-    { value: 'THIS_WEEK' as const, label: 'This Week', icon: '📅' },
-    { value: 'AFTER_THIS_WEEK' as const, label: 'After This Week', icon: '⏰' }
+    { value: 'THIS_WEEK' as const, label: 'This Week', icon: '🗓️' },
+    { value: 'AFTER_THIS_WEEK' as const, label: 'Later', icon: '⏳' }
   ]
 
   useImperativeHandle(ref, () => ({
@@ -72,17 +72,6 @@ const OfferForm = forwardRef<OfferFormHandle, OfferFormProps>(({ error }, ref) =
         </div>
       </div>
 
-      {/* Comment Section */}
-      <div className="form-section">
-        <textarea
-          className="comment-textarea"
-          placeholder="Leave a comment"
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          rows={4}
-        />
-      </div>
-
       {/* Time Selection Section */}
       <div className="form-section">
         <div className="time-options">
@@ -97,6 +86,17 @@ const OfferForm = forwardRef<OfferFormHandle, OfferFormProps>(({ error }, ref) =
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Comment Section */}
+      <div className="form-section">
+        <textarea
+          className="comment-textarea"
+          placeholder="Leave a comment"
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          rows={2}
+        />
       </div>
     </div>
   )

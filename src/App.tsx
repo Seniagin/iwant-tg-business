@@ -1,200 +1,113 @@
 import { useEffect, useState } from 'react'
 import { telegramAuth } from './services/auth'
-import { UserProvider } from './contexts/UserContext'
+import { UserProvider, useUser } from './contexts/UserContext'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { RequestProvider } from './contexts/RequestContext'
 import LoginPage from './pages/LoginPage/LoginPage'
 import ProfilePage from './pages/ProfilePage/ProfilePage'
-import RequestsPage from './pages/RequestsPage/RequestsPage'
 import AllRequestsPage from './pages/AllRequestsPage/AllRequestsPage'
 import RequestsWithOffersPage from './pages/RequestsWithOffersPage/RequestsWithOffersPage'
 import RequestDetailPage from './pages/RequestDetailPage/RequestDetailPage'
 import LoadingSpinner from './components/LoadingSpinner'
 import AppMainNav from './components/AppMainNav/AppMainNav'
 import './components/AppShell/AppShell.css'
+import './App.css'
 
-type AppPage = 'login' | 'profile' | 'request' | 'all-requests' | 'requests-with-offers' | 'request-detail'
+type AppPage = 'login' | 'all-requests' | 'requests-with-offers' | 'request-detail'
+type TabType = 'all-requests' | 'requests-with-offers'
 
-function isRequestsFlowPage(page: AppPage): boolean {
-  return (
-    page === 'request' ||
-    page === 'all-requests' ||
-    page === 'requests-with-offers' ||
-    page === 'request-detail'
-  )
+function getInitials(firstName?: string | null, lastName?: string | null, username?: string | null): string {
+  const first = firstName?.trim() ?? ''
+  const last = lastName?.trim() ?? ''
+  if (first && last) return (first[0] + last[0]).toUpperCase()
+  if (first) return first.slice(0, 2).toUpperCase()
+  if (username) return username.slice(0, 2).toUpperCase()
+  return '?'
 }
 
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth()
+  const { user } = useUser()
   const [currentPage, setCurrentPage] = useState<AppPage | null>(null)
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null)
+  const [profileOpen, setProfileOpen] = useState(false)
 
-  // Utility functions for URL management
   const updateURL = (page: AppPage, requestId?: string) => {
     const url = new URL(window.location.href)
     url.searchParams.set('page', page)
-    
     if (requestId) {
       url.searchParams.set('request_id', requestId)
     } else {
       url.searchParams.delete('request_id')
     }
-    
-    // Update URL without causing a page reload
     window.history.pushState({}, '', url.toString())
   }
 
   const navigateToPage = (page: AppPage, requestId?: string) => {
     setCurrentPage(page)
-    if (requestId !== undefined) {
-      setSelectedRequestId(requestId)
-    } else {
-      setSelectedRequestId(null)
-    }
+    setSelectedRequestId(requestId ?? null)
     updateURL(page, requestId)
   }
 
+  const navigateToTab = (tab: TabType) => {
+    navigateToPage(tab)
+  }
 
-  // Handle browser back/forward navigation
+  // Handle browser back/forward
   useEffect(() => {
     const handlePopState = () => {
-      const urlParams = new URLSearchParams(window.location.search)
-      const page = urlParams.get('page') as AppPage
-      const requestId = urlParams.get('request_id')
-      
+      const params = new URLSearchParams(window.location.search)
+      const page = params.get('page') as AppPage | null
+      const requestId = params.get('request_id')
       if (page) {
-        setCurrentPage(page as AppPage)
+        setCurrentPage(page)
         setSelectedRequestId(requestId || null)
       }
     }
-
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
   useEffect(() => {
-    console.log('🚀 App initializing...')
-    console.log('🌐 User Agent:', navigator.userAgent)
-    console.log('📱 Is Telegram WebApp available:', telegramAuth.isAvailable())
-
-    // Initialize Telegram WebApp
     try {
       if (telegramAuth.isAvailable()) {
-        // Set Telegram theme
         const theme = telegramAuth.getTheme()
         if (theme) {
           document.body.style.backgroundColor = theme.background_color
           document.body.style.color = theme.text_color
         }
-
-        // Check if we're in windowed mode and add appropriate CSS class
         const isWindowed = window.innerHeight < window.screen.height * 0.9
-        if (isWindowed) {
-          document.body.classList.add('windowed-mode')
-          console.log('🪟 Running in windowed mode')
-        } else {
-          document.body.classList.add('fullscreen-mode')
-          console.log('📱 Running in fullscreen mode')
-        }
-
-        // Main menu button removed - action buttons are now at bottom of request detail page
+        document.body.classList.add(isWindowed ? 'windowed-mode' : 'fullscreen-mode')
       }
     } catch (error) {
       console.log('❌ Error during Telegram initialization:', error)
     }
   }, [])
 
-  // Handle URL parameters and page routing when authentication state changes
   useEffect(() => {
     if (!isLoading) {
-      const urlParams = new URLSearchParams(window.location.search)
-      const page = urlParams.get('page')
-      const requestId = urlParams.get('request_id')
-      
-      console.log('🔗 URL parameters - page:', page, 'request_id:', requestId)
+      const params = new URLSearchParams(window.location.search)
+      const page = params.get('page')
+      const requestId = params.get('request_id')
 
       if (isAuthenticated) {
-        // Set initial page based on URL parameter
-        if (page === 'request') {
-          navigateToPage('request')
-        } else if (page === 'all-requests') {
-          navigateToPage('all-requests')
-        } else if (page === 'requests-with-offers') {
+        if (page === 'requests-with-offers') {
           navigateToPage('requests-with-offers')
         } else if (page === 'request-detail' && requestId) {
           navigateToPage('request-detail', requestId)
         } else {
-          navigateToPage('profile')
+          // Requests is the default landing page
+          navigateToPage('all-requests')
         }
       } else {
-        // Not authenticated, show login
         setCurrentPage('login')
       }
     }
   }, [isAuthenticated, isLoading])
 
-  console.log('App render - isLoading:', isLoading, 'isAuthenticated:', isAuthenticated, 'currentPage:', currentPage)
-
   if (isLoading || currentPage === null) {
-    console.log('Rendering LoadingSpinner')
     return <LoadingSpinner />
   }
-
-  const renderAuthenticatedContent = () => {
-    // Determine active tab based on current page
-    const getActiveTab = (): 'all-requests' | 'requests-with-offers' => {
-      if (currentPage === 'requests-with-offers') {
-        return 'requests-with-offers'
-      }
-      return 'all-requests'
-    }
-
-    switch (currentPage) {
-      case 'profile':
-        return <ProfilePage />
-      case 'request':
-      case 'all-requests':
-      case 'requests-with-offers': {
-        const activeTab = getActiveTab()
-        return (
-          <div className="requests-container">
-            <RequestsPage 
-              activeTab={activeTab}
-              onNavigateToTab={(tab) => {
-                if (tab === 'all-requests') {
-                  navigateToPage('all-requests')
-                } else {
-                  navigateToPage('requests-with-offers')
-                }
-              }}
-            />
-            {activeTab === 'all-requests' ? (
-              <AllRequestsPage 
-                onRequestClick={(requestId) => {
-                  navigateToPage('request-detail', requestId)
-                }}
-              />
-            ) : (
-              <RequestsWithOffersPage 
-                onRequestClick={(requestId) => {
-                  navigateToPage('request-detail', requestId)
-                }}
-              />
-            )}
-          </div>
-        )
-      }
-      case 'request-detail':
-        return <RequestDetailPage 
-          requestId={selectedRequestId || undefined} 
-          onBack={() => navigateToPage('request')}
-        />
-      default:
-        return <ProfilePage />
-    }
-  }
-
-  console.log('Rendering main app content')
 
   if (!isAuthenticated) {
     return (
@@ -204,17 +117,57 @@ function AppContent() {
     )
   }
 
+  const isRequestDetail = currentPage === 'request-detail'
+  const activeTab: TabType = currentPage === 'requests-with-offers' ? 'requests-with-offers' : 'all-requests'
+  const userInitials = getInitials(user?.telegramFirstName, user?.telegramLastName, user?.telegramUsername)
+
+  const renderContent = () => {
+    switch (currentPage) {
+      case 'all-requests':
+        return (
+          <AllRequestsPage
+            onRequestClick={(requestId) => navigateToPage('request-detail', requestId)}
+          />
+        )
+      case 'requests-with-offers':
+        return (
+          <RequestsWithOffersPage
+            onRequestClick={(requestId) => navigateToPage('request-detail', requestId)}
+          />
+        )
+      case 'request-detail':
+        return (
+          <RequestDetailPage
+            requestId={selectedRequestId || undefined}
+            onBack={() => navigateToPage('all-requests')}
+          />
+        )
+      default:
+        return null
+    }
+  }
+
   return (
     <div className="App">
       <div className="app-shell">
         <AppMainNav
-          profileActive={currentPage === 'profile'}
-          requestsActive={isRequestsFlowPage(currentPage)}
-          onProfile={() => navigateToPage('profile')}
-          onRequests={() => navigateToPage('all-requests')}
+          activeTab={activeTab}
+          showTabs={!isRequestDetail}
+          onNavigateToTab={navigateToTab}
+          onOpenProfile={() => setProfileOpen(true)}
+          userInitials={userInitials}
         />
-        <main className="app-shell__main">{renderAuthenticatedContent()}</main>
+        <main className="app-shell__main">
+          {renderContent()}
+        </main>
       </div>
+
+      {/* Profile settings — full-screen slide-up sheet */}
+      {profileOpen && (
+        <div className="profile-sheet-overlay">
+          <ProfilePage onClose={() => setProfileOpen(false)} />
+        </div>
+      )}
     </div>
   )
 }

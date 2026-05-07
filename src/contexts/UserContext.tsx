@@ -33,17 +33,6 @@ interface UserProviderProps {
   children: ReactNode
 }
 
-const demoUser: User = {
-  id: 12345,
-  email: null,
-  isActive: true,
-  createdAt: new Date().toISOString(),
-  telegramId: 12345,
-  telegramFirstName: 'Demo',
-  telegramLastName: 'User',
-  telegramUsername: 'demo_user',
-}
-
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -82,18 +71,18 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
           }
         } else {
           console.log('Telegram authentication failed:', authResult.error)
-          setIsAuthenticated(true)
-          setUser(demoUser)
+          setIsAuthenticated(false)
+          setUser(null)
         }
       } else {
-        console.log('No Telegram WebApp, using demo mode')
-        setIsAuthenticated(true)
-        setUser(demoUser)
+        console.log('No Telegram WebApp available')
+        setIsAuthenticated(false)
+        setUser(null)
       }
     } catch (error) {
-      console.log('Error during login, using demo mode:', error)
-      setIsAuthenticated(true)
-      setUser(demoUser)
+      console.error('Error during login:', error)
+      setIsAuthenticated(false)
+      setUser(null)
     } finally {
       setIsLoading(false)
     }

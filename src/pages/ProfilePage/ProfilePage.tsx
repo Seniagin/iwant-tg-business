@@ -1,30 +1,140 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
+import { ChevronRight, X } from 'lucide-react'
 import './ProfilePage.css'
 import type { BusinessContactsPayload } from '../../types'
 import { apiService } from '../../services/api'
 import { useUser } from '../../contexts/UserContext'
+import { useAuth } from '../../contexts/AuthContext'
 import ProfileLocationSection from '../../components/ProfileLocationSection/ProfileLocationSection'
 
-const ProfilePage: React.FC = () => {
+function getInitials(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean)
+  if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase()
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase()
+  return '?'
+}
+
+// ── Edit modal (bottom sheet) ─────────────────────────────────────────────
+interface EditModalProps {
+  title: string
+  value: string
+  placeholder: string
+  multiline?: boolean
+  onSave: (value: string) => void
+  onClose: () => void
+}
+
+const EditModal: React.FC<EditModalProps> = ({ title, value: initial, placeholder, multiline, onSave, onClose }) => {
+  const [draft, setDraft] = useState(initial)
+  const inputRef = useRef<HTMLInputElement & HTMLTextAreaElement>(null)
+
+  useEffect(() => {
+    // slight delay so the sheet animation starts before the keyboard appears
+    const t = setTimeout(() => inputRef.current?.focus(), 80)
+    return () => clearTimeout(t)
+  }, [])
+
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) onClose()
+  }
+
+  return (
+    <div className="edit-modal-backdrop" onClick={handleBackdropClick}>
+      <div className="edit-modal-sheet">
+        <div className="edit-modal-header">
+          <span className="edit-modal-title">{title}</span>
+          <button className="edit-modal-close" onClick={onClose} aria-label="Close">
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="edit-modal-body">
+          {multiline ? (
+            <textarea
+              ref={inputRef as React.Ref<HTMLTextAreaElement>}
+              className="edit-modal-input edit-modal-textarea"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              placeholder={placeholder}
+              rows={6}
+            />
+          ) : (
+            <input
+              ref={inputRef as React.Ref<HTMLInputElement>}
+              type="text"
+              className="edit-modal-input"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              placeholder={placeholder}
+            />
+          )}
+        </div>
+
+        <div className="edit-modal-footer">
+          <button className="edit-modal-save" onClick={() => onSave(draft)}>
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Tap row ───────────────────────────────────────────────────────────────
+interface TapRowProps {
+  label: string
+  value: string | null | undefined
+  placeholder: string
+  onClick: () => void
+  isLast?: boolean
+}
+
+const TapRow: React.FC<TapRowProps> = ({ label, value, placeholder, onClick, isLast }) => {
+  const str = value ?? '';
+  return (
+  <>
+    <button className="settings-row" onClick={onClick}>
+      <span className="settings-row-label">{label}</span>
+      <span className={`settings-row-value${!str.trim() ? ' settings-row-value--empty' : ''}`}>
+        {str.trim() || placeholder}
+      </span>
+      <ChevronRight size={16} className="settings-row-chevron" />
+    </button>
+    {!isLast && <div className="settings-divider" />}
+  </>
+  );
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────
+type ModalField = 'name' | 'description' | 'email' | 'phone' | 'instagram' | 'website' | null
+
+interface ProfilePageProps {
+  onClose?: () => void
+}
+
+const ProfilePage: React.FC<ProfilePageProps> = ({ onClose }) => {
   const { isAuthenticated, user, isLoading, business, businessLoading, refreshBusiness } = useUser()
+  const { logout } = useAuth()
+
   const [businessName, setBusinessName] = useState('')
-  const [isEditingName, setIsEditingName] = useState(false)
   const [description, setDescription] = useState('')
-  const [isEditing, setIsEditing] = useState(false)
+  const [modalField, setModalField] = useState<ModalField>(null)
+
   const [currency, setCurrency] = useState('')
   const [currencies, setCurrencies] = useState<string[]>([])
+
   const [contactPhone, setContactPhone] = useState('')
   const [contactEmail, setContactEmail] = useState('')
   const [contactWebsite, setContactWebsite] = useState('')
   const [contactInstagram, setContactInstagram] = useState('')
-  const [contactsSaving, setContactsSaving] = useState(false)
+
   useEffect(() => {
     (async () => {
       try {
-        const currenciesList = await apiService.getAvailableCurrenciesList()
-        setCurrencies(currenciesList)
-      } catch (error) {
-        console.error('Failed to load currencies list:', error)
+        const list = await apiService.getAvailableCurrenciesList()
+        setCurrencies(list)
+      } catch (e) {
+        console.error('Failed to load currencies', e)
       }
     })()
   }, [])
@@ -45,37 +155,44 @@ const ProfilePage: React.FC = () => {
     }
   }, [business])
 
-  const handleSaveBusinessName = async () => {
+  const handleSaveBusinessName = async (value: string) => {
     try {
-      await apiService.updateBusinessName(businessName.trim())
-      setIsEditingName(false)
+      await apiService.updateBusinessName(value.trim())
+      setBusinessName(value.trim())
+      setModalField(null)
       await refreshBusiness()
-    } catch (error) {
-      console.error('Failed to update business name:', error)
+    } catch (e) {
+      console.error('Failed to update business name', e)
     }
   }
 
-  const handleSaveDescription = () => {
-    apiService.updateActivityDescription(description)
-    setIsEditing(false)
+  const handleSaveDescription = (value: string) => {
+    apiService.updateActivityDescription(value)
+    setDescription(value)
+    setModalField(null)
   }
 
-  const handleSaveContacts = async () => {
-    if (!business) return
+  const handleSaveContact = async (field: keyof BusinessContactsPayload, value: string) => {
+    const setters: Record<keyof BusinessContactsPayload, (v: string) => void> = {
+      phone: setContactPhone,
+      email: setContactEmail,
+      website: setContactWebsite,
+      instagram: setContactInstagram,
+    }
     const payload: BusinessContactsPayload = {
-      phone: contactPhone.trim(),
-      email: contactEmail.trim(),
-      website: contactWebsite.trim(),
-      instagram: contactInstagram.trim(),
+      phone: contactPhone,
+      email: contactEmail,
+      website: contactWebsite,
+      instagram: contactInstagram,
+      [field]: value.trim(),
     }
     try {
-      setContactsSaving(true)
       await apiService.updateBusinessContacts(payload)
+      setters[field](value.trim())
+      setModalField(null)
       await refreshBusiness()
-    } catch (error) {
-      console.error('Failed to update business contacts:', error)
-    } finally {
-      setContactsSaving(false)
+    } catch (e) {
+      console.error('Failed to update contact', e)
     }
   }
 
@@ -83,263 +200,138 @@ const ProfilePage: React.FC = () => {
     try {
       await apiService.updateBusinessCurrency(newCurrency)
       setCurrency(newCurrency)
-      // Refresh business data to get updated currency
       await refreshBusiness()
-    } catch (error) {
-      console.error('Failed to update currency:', error)
-      // Optionally show error message to user
+    } catch (e) {
+      console.error('Failed to update currency', e)
     }
   }
 
   if (isLoading || businessLoading) {
-    return (
-      <div className="profile-container">
-        <div className="profile-body">
-          <div className="loading">Loading...</div>
-        </div>
-      </div>
-    )
+    return <div className="profile-page"><div className="profile-loading">Loading…</div></div>
   }
 
   if (!isAuthenticated) {
-    return (
-      <div className="profile-container">
-        <div className="profile-body">
-          <div className="loading">Please log in to view your profile.</div>
-        </div>
-      </div>
-    )
+    return <div className="profile-page"><div className="profile-loading">Please log in to view your profile.</div></div>
   }
 
-  const profileNameLine = user
+  const fullName = user
     ? [user.telegramFirstName, user.telegramLastName].map((s) => s?.trim()).filter(Boolean).join(' ')
     : ''
-  const profileTelegramHandle = user?.telegramUsername?.trim() ?? ''
+  const handle = user?.telegramUsername?.trim() ?? ''
+  const displayName = fullName || (handle ? `@${handle}` : '—')
 
   return (
-    <div className="profile-container">
-      <div className="header profile-header">
-        {user && (
-          <div className="profile-header-identity">
-            <p className="profile-header-name">
-              {profileNameLine || (profileTelegramHandle ? `@${profileTelegramHandle}` : '—')}
-            </p>
-            {profileNameLine && profileTelegramHandle ? (
-              <p className="profile-header-username">@{profileTelegramHandle}</p>
-            ) : null}
-          </div>
+    <div className="profile-page">
+      {/* ── Avatar hero ── */}
+      <div className="profile-hero">
+        {onClose && (
+          <button className="profile-close-btn" onClick={onClose} aria-label="Close settings">
+            <X size={20} />
+          </button>
         )}
+        <div className="profile-avatar">
+          <span className="profile-avatar-initials">{getInitials(fullName || handle)}</span>
+        </div>
+        <div className="profile-hero-text">
+          <p className="profile-hero-name">{displayName}</p>
+          {fullName && handle && <p className="profile-hero-handle">@{handle}</p>}
+          {business?.name && <p className="profile-hero-business">{business.name}</p>}
+        </div>
       </div>
 
+      {/* ── Scrollable body ── */}
       <div className="profile-body">
+
         {business && (
-          <section className="activity-section business-name-section" aria-labelledby="business-name-heading">
-            <div className="section-header section-header--with-subtitle">
-              <div className="section-header-titles">
-                <h3 id="business-name-heading">Business name</h3>
-                <p className="section-subtitle">Shown as your public business title across the app.</p>
-              </div>
-              <button
-                type="button"
-                className="edit-button"
-                onClick={() => {
-                  if (isEditingName) {
-                    setBusinessName(business.name)
-                  }
-                  setIsEditingName(!isEditingName)
-                }}
-              >
-                {isEditingName ? 'Cancel' : 'Edit'}
-              </button>
-            </div>
-
-            {isEditingName ? (
-              <div className="edit-form business-name-edit">
-                <input
-                  type="text"
-                  className="input business-name-input"
-                  value={businessName}
-                  onChange={(e) => setBusinessName(e.target.value)}
-                  placeholder="Your business or brand name"
-                  maxLength={120}
-                  aria-label="Business name"
-                />
-                <div className="business-description-actions">
-                  <button type="button" className="btn btn-primary save-button" onClick={handleSaveBusinessName}>
-                    Save
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="description-display business-name-display">
-                {businessName.trim() ? (
-                  <p className="business-name-body">{businessName.trim()}</p>
-                ) : (
-                  <p className="placeholder-text">Tap Edit to set your business name.</p>
-                )}
-              </div>
-            )}
-          </section>
-        )}
-
-        <section className="activity-section business-description-section" aria-labelledby="business-desc-heading">
-          <div className="section-header section-header--with-subtitle">
-            <div className="section-header-titles">
-              <h3 id="business-desc-heading">Business description</h3>
-              <p className="section-subtitle">
-                Tell people what you offer. This helps clients understand your services when you engage with requests.
-              </p>
-            </div>
-            <button
-              type="button"
-              className="edit-button"
-              onClick={() => setIsEditing(!isEditing)}
-            >
-              {isEditing ? 'Cancel' : 'Edit'}
-            </button>
-          </div>
-
-          {isEditing ? (
-            <div className="edit-form business-description-edit">
-              <textarea
-                className="input textarea business-description-textarea"
+          <div className="settings-section">
+            <p className="settings-section-label">Business</p>
+            <div className="settings-group">
+              <TapRow
+                label="Name"
+                value={businessName}
+                placeholder="Add business name"
+                onClick={() => setModalField('name')}
+              />
+              <TapRow
+                label="Description"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Describe your activities, skills, or services you provide..."
-                rows={8}
-                aria-label="Business description"
+                placeholder="Add description"
+                onClick={() => setModalField('description')}
+                isLast
               />
-              <div className="business-description-actions">
-                <button
-                  type="button"
-                  className="btn btn-primary save-button"
-                  onClick={handleSaveDescription}
-                >
-                  Save
-                </button>
-              </div>
             </div>
-          ) : (
-            <div className="description-display business-description-display">
-              {description ? (
-                <p className="business-description-body">{description}</p>
-              ) : (
-                <div className="business-description-empty">
-                  <p className="business-description-empty-title">No description yet</p>
-                  <p className="placeholder-text business-description-empty-hint">
-                    Tap Edit to add a short summary of what you do and how you help clients.
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-        </section>
-
-        {business && (
-          <section className="activity-section business-contacts-section" aria-labelledby="business-contacts-heading">
-            <div className="section-header section-header--with-subtitle">
-              <div className="section-header-titles">
-                <h3 id="business-contacts-heading">Contact &amp; social</h3>
-                <p className="section-subtitle">
-                  How clients can reach you. Leave a field empty if you do not want it shown.
-                </p>
-              </div>
-            </div>
-            <div className="business-contacts-form">
-              <label className="business-contacts-label" htmlFor="contact-email">
-                Email
-              </label>
-              <input
-                id="contact-email"
-                type="email"
-                className="input business-contacts-input"
-                value={contactEmail}
-                onChange={(e) => setContactEmail(e.target.value)}
-                placeholder="you@example.com"
-                autoComplete="email"
-              />
-
-              <label className="business-contacts-label" htmlFor="contact-phone">
-                Phone
-              </label>
-              <input
-                id="contact-phone"
-                type="tel"
-                className="input business-contacts-input"
-                value={contactPhone}
-                onChange={(e) => setContactPhone(e.target.value)}
-                placeholder="+380 …"
-                autoComplete="tel"
-              />
-
-              <label className="business-contacts-label" htmlFor="contact-instagram">
-                Instagram
-              </label>
-              <input
-                id="contact-instagram"
-                type="text"
-                className="input business-contacts-input"
-                value={contactInstagram}
-                onChange={(e) => setContactInstagram(e.target.value)}
-                placeholder="@handle or full URL"
-                autoCapitalize="none"
-                autoCorrect="off"
-              />
-
-              <label className="business-contacts-label" htmlFor="contact-website">
-                Website
-              </label>
-              <input
-                id="contact-website"
-                type="url"
-                className="input business-contacts-input"
-                value={contactWebsite}
-                onChange={(e) => setContactWebsite(e.target.value)}
-                placeholder="https://…"
-                autoComplete="url"
-              />
-
-              <div className="business-description-actions business-contacts-actions">
-                <button
-                  type="button"
-                  className="btn btn-primary save-button"
-                  onClick={handleSaveContacts}
-                  disabled={contactsSaving}
-                >
-                  {contactsSaving ? 'Saving…' : 'Save contacts'}
-                </button>
-              </div>
-            </div>
-          </section>
+          </div>
         )}
 
-      {business && (
-        <div className="activity-section">
-          <div className="section-header">
-            <h3>Default Currency</h3>
+        {business && (
+          <div className="settings-section">
+            <p className="settings-section-label">Contact &amp; social</p>
+            <div className="settings-group">
+              <TapRow label="Email"     value={contactEmail}    placeholder="Add email"     onClick={() => setModalField('email')} />
+              <TapRow label="Phone"     value={contactPhone}    placeholder="Add phone"     onClick={() => setModalField('phone')} />
+              <TapRow label="Instagram" value={contactInstagram} placeholder="Add Instagram" onClick={() => setModalField('instagram')} />
+              <TapRow label="Website"   value={contactWebsite}  placeholder="Add website"   onClick={() => setModalField('website')} isLast />
+            </div>
           </div>
-          <div className="currency-select-container">
-            <select
-              className="currency-select"
-              value={currency}
-              onChange={(e) => handleCurrencyChange(e.target.value)}
-            >
-              {currencies.length === 0 ? (
-                <option value="">Loading currencies...</option>
-              ) : (
-                currencies.map((curr) => (
-                  <option key={curr} value={curr}>
-                    {curr}
-                  </option>
-                ))
-              )}
-            </select>
+        )}
+
+        {business && (
+          <div className="settings-section">
+            <p className="settings-section-label">Preferences</p>
+            <div className="settings-group">
+              <div className="settings-row settings-row--select">
+                <span className="settings-row-label">Currency</span>
+                <select className="currency-select" value={currency} onChange={(e) => handleCurrencyChange(e.target.value)}>
+                  {currencies.length === 0
+                    ? <option value="">Loading…</option>
+                    : currencies.map((c) => <option key={c} value={c}>{c}</option>)
+                  }
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="settings-section">
+          <p className="settings-section-label">Location</p>
+          <div className="settings-group settings-group--inset">
+            <ProfileLocationSection />
           </div>
         </div>
-      )}
 
-      <ProfileLocationSection />
+        <div className="settings-section settings-section--footer">
+          <button className="logout-btn" onClick={logout}>
+            Log out
+          </button>
+        </div>
+
       </div>
+
+      {/* ── Edit modals ── */}
+      {modalField === 'name' && (
+        <EditModal title="Business name" value={businessName} placeholder="Your business or brand name"
+          onSave={handleSaveBusinessName} onClose={() => setModalField(null)} />
+      )}
+      {modalField === 'description' && (
+        <EditModal title="Description" value={description} placeholder="Describe your services…" multiline
+          onSave={handleSaveDescription} onClose={() => setModalField(null)} />
+      )}
+      {modalField === 'email' && (
+        <EditModal title="Email" value={contactEmail} placeholder="you@example.com"
+          onSave={(v) => handleSaveContact('email', v)} onClose={() => setModalField(null)} />
+      )}
+      {modalField === 'phone' && (
+        <EditModal title="Phone" value={contactPhone} placeholder="+380 …"
+          onSave={(v) => handleSaveContact('phone', v)} onClose={() => setModalField(null)} />
+      )}
+      {modalField === 'instagram' && (
+        <EditModal title="Instagram" value={contactInstagram} placeholder="@handle or full URL"
+          onSave={(v) => handleSaveContact('instagram', v)} onClose={() => setModalField(null)} />
+      )}
+      {modalField === 'website' && (
+        <EditModal title="Website" value={contactWebsite} placeholder="https://…"
+          onSave={(v) => handleSaveContact('website', v)} onClose={() => setModalField(null)} />
+      )}
     </div>
   )
 }

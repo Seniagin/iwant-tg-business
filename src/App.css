@@ -1,0 +1,20 @@
+/* Profile settings sheet — slides up over the requests page */
+.profile-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  animation: profile-sheet-in 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@keyframes profile-sheet-in {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.profile-sheet-overlay .profile-page {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}

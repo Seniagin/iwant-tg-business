@@ -2,11 +2,11 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { apiService } from '../../services/api'
 import './AllRequestsPage.css'
 import { Demand } from '../../types'
+import { timeAgo } from '../../utils/time'
 
 interface Request {
   id: string
   title: string
-  description: string
   distanceInKilometers: string | null
   created_at: string
   updated_at: string
@@ -33,7 +33,6 @@ const AllRequestsPage: React.FC<AllRequestsPageProps> = ({ onRequestClick }) => 
       const transformedRequests: Request[] = demands.map((demand: Demand) => ({
         id: demand.id.toString(),
         title: demand.summarizedTranslation || demand.translation || demand.transcription,
-        description: demand.translation || demand.transcription,
         distanceInKilometers: demand.distance ? demand.distance.toFixed(2) : null,
         created_at: demand.createdAt,
         updated_at: demand.updatedAt
@@ -69,16 +68,6 @@ const AllRequestsPage: React.FC<AllRequestsPageProps> = ({ onRequestClick }) => 
   useEffect(() => {
     loadRequests()
   }, [loadRequests])
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
 
   const handleRequestClick = (request: Request) => {
     onRequestClick(request.id)
@@ -127,20 +116,10 @@ const AllRequestsPage: React.FC<AllRequestsPageProps> = ({ onRequestClick }) => 
               <div className="request-header">
                 <h3 className="request-title">{request.title}</h3>
               </div>
-              <p className="request-description">{request.description}</p>
               <div className="request-meta">
+                <span className="request-date">{timeAgo(request.created_at)}</span>
                 {request.distanceInKilometers && (
-                  <span className="request-distance">
-                    Distance: {request.distanceInKilometers} km
-                  </span>
-                )}
-                <span className="request-date">
-                  Created: {formatDate(request.created_at)}
-                </span>
-                {request.updated_at !== request.created_at && (
-                  <span className="request-updated">
-                    Updated: {formatDate(request.updated_at)}
-                  </span>
+                  <span className="request-distance">{request.distanceInKilometers} km from you</span>
                 )}
               </div>
             </div>

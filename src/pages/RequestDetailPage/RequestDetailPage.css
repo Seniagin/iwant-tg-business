@@ -1,6 +1,5 @@
 .request-detail-page {
-  min-height: 100vh;
-  height: 100vh;
+  height: 100%;
   background: var(--tg-theme-bg-color, #ffffff);
   color: var(--tg-theme-text-color, #000000);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
@@ -9,6 +8,7 @@
   overflow: hidden;
 }
 
+/* ── Header ── */
 .request-detail-header {
   padding: 16px 20px;
   padding-left: max(20px, calc(16px + env(safe-area-inset-left, 0px)));
@@ -16,7 +16,6 @@
   position: sticky;
   top: 0;
   z-index: 50;
-  overflow: visible;
   min-height: 48px;
   flex-shrink: 0;
   display: flex;
@@ -32,26 +31,17 @@
   font-weight: 600;
   cursor: pointer;
   padding: 8px 0;
-  padding-left: 0;
   margin: 0;
-  transition: all 0.2s ease;
+  transition: opacity 0.2s ease, transform 0.2s ease;
   display: flex;
   align-items: center;
   gap: 4px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  font-family: inherit;
   -webkit-tap-highlight-color: transparent;
-  width: auto;
-  min-width: fit-content;
 }
 
-.back-button:hover {
-  opacity: 0.8;
-  transform: translateX(-2px);
-}
-
-.back-button:active {
-  transform: translateX(-4px);
-}
+.back-button:hover { opacity: 0.8; transform: translateX(-2px); }
+.back-button:active { transform: translateX(-4px); }
 
 .ignore-button {
   background: transparent;
@@ -59,7 +49,6 @@
   color: var(--tg-theme-hint-color, #999999);
   cursor: pointer;
   padding: 8px;
-  margin: 0;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
@@ -68,11 +57,6 @@
   min-width: 40px;
   min-height: 40px;
   -webkit-tap-highlight-color: transparent;
-}
-
-.ignore-button svg {
-  width: 18px;
-  height: 18px;
 }
 
 .ignore-button:hover {
@@ -85,154 +69,117 @@
   background: rgba(220, 53, 69, 0.15);
 }
 
+/* ── Content area ── */
 .request-detail-content {
   flex: 1;
   overflow-y: auto;
-  padding: 24px 20px;
-  padding-bottom: 120px; /* More space for bottom actions on iPhone */
   max-width: 800px;
   width: 100%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  padding: 0 20px;
+  gap: 16px;
+  padding-bottom: 16px;
 }
 
-
-/* Chat Section - contains both demand and offer messages */
-.chat-section {
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.request-info {
-  display: flex;
-  justify-content: flex-start;
-  align-items: flex-start;
-}
-
-.request-description {
-  max-width: 75%;
-  position: relative;
-  display: inline-block;
-}
-
-.request-description::before {
-  content: '';
-  position: absolute;
-  left: -8px;
-  bottom: 0;
-  width: 0;
-  height: 0;
-  border-style: solid;
-  border-width: 0 8px 12px 0;
-  border-color: transparent var(--tg-theme-secondary-bg-color, #e5e5e5) transparent transparent;
-}
-
-.request-description p {
-  background: var(--tg-theme-secondary-bg-color, #e5e5e5);
-  color: var(--tg-theme-text-color, #000000);
-  padding: 12px 16px;
-  border-radius: 12px 12px 12px 4px;
-  font-size: 15px;
-  line-height: 1.4;
-  margin: 0;
-  white-space: pre-line;
-  word-wrap: break-word;
-  display: block;
-  box-sizing: border-box;
-}
-
-/* Offer Message (sent message style - right side) */
-.offer-message-container {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.offer-message {
-  max-width: 75%;
-}
-
-.offer-message-content {
-  background: var(--tg-theme-button-color, #2481cc);
-  color: var(--tg-theme-button-text-color, #ffffff);
-  padding: 12px 16px;
-  border-radius: 12px 12px 0 12px;
-  font-size: 15px;
-  line-height: 1.4;
-  word-wrap: break-word;
-  position: relative;
-}
-
-.offer-message-content::after {
-  content: '';
-  position: absolute;
-  right: -8px;
-  bottom: 0;
-  width: 0;
-  height: 0;
-  border-style: solid;
-  border-width: 0 0 12px 8px;
-  border-color: transparent transparent transparent var(--tg-theme-button-color, #2481cc);
-  transform: scaleY(-1);
-}
-
-.offer-price {
-  font-weight: 600;
-  font-size: 16px;
-  margin-bottom: 8px;
-}
-
-.offer-comment {
-  margin: 0;
-  margin-bottom: 8px;
-  white-space: pre-line;
-}
-
-.offer-comment:last-child {
-  margin-bottom: 0;
-}
-
-.offer-time {
-  font-size: 13px;
-  opacity: 0.9;
+/* ── Request card ── */
+.request-card {
+  background: var(--tg-theme-secondary-bg-color, #f2f2f7);
+  border-radius: 14px;
+  padding: 16px 18px;
   margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
 }
 
+.request-card-text {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--tg-theme-text-color, #000000);
+  white-space: pre-line;
+  word-wrap: break-word;
+}
+
+.request-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.request-card-time {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tg-theme-text-color, #000000);
+  opacity: 0.45;
+}
+
+.request-card-distance {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tg-theme-button-color, #007bff);
+  opacity: 0.85;
+}
+
+/* ── Offer already submitted ── */
+.offer-summary {
+  background: var(--tg-theme-secondary-bg-color, #f2f2f7);
+  border-radius: 14px;
+  padding: 16px 18px;
+  flex-shrink: 0;
+}
+
+.offer-summary-label {
+  margin: 0 0 10px 0;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--tg-theme-hint-color, #999999);
+}
+
+.offer-summary-price {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--tg-theme-text-color, #000000);
+  margin-bottom: 6px;
+}
+
+.offer-summary-time {
+  font-size: 14px;
+  color: var(--tg-theme-hint-color, #666666);
+  margin-bottom: 6px;
+}
+
+.offer-summary-comment {
+  margin: 8px 0 0 0;
+  font-size: 14px;
+  color: var(--tg-theme-text-color, #000000);
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+/* ── Bottom actions ── */
 .bottom-actions {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 20px;
-  z-index: 100;
-  /* Handle both full screen and windowed mode */
-  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-  /* Fallback for windowed mode */
-  margin-bottom: 0;
+  flex-shrink: 0;
+  margin-top: auto;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .action-button {
+  width: 100%;
   padding: 18px 24px;
   border-radius: 12px;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
   border: none;
-  flex: 1;
   min-height: 52px;
   display: flex;
   align-items: center;
-  font-weight: 700;
   justify-content: center;
-  text-align: center;
   text-transform: uppercase;
-  /* Better touch target for iPhone */
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -242,7 +189,7 @@
 }
 
 .action-button.primary:hover:not(:disabled) {
-  background: var(--tg-theme-button-color, #0056b3);
+  opacity: 0.9;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
 }
@@ -252,6 +199,7 @@
   cursor: not-allowed;
 }
 
+/* ── Loading / Error ── */
 .loading-container,
 .error-container {
   display: flex;
@@ -297,69 +245,28 @@
 }
 
 .retry-button:hover {
-  background: var(--tg-theme-button-color, #0056b3);
+  opacity: 0.9;
   transform: translateY(-1px);
 }
 
-/* Responsive Design */
+/* ── Responsive ── */
 @media (max-width: 768px) {
   .request-detail-header {
     padding: 12px 16px;
     padding-left: max(16px, calc(12px + env(safe-area-inset-left, 0px)));
   }
-  
-  .request-detail-header h1 {
-    font-size: 18px;
-  }
-  
+
   .request-detail-content {
-    padding: 16px;
-    padding-bottom: 100px;
-    gap: 16px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-  
-  .request-description {
-    max-width: 85%;
+    padding: 0 16px 16px;
   }
 
-  .request-description p {
-    font-size: 14px;
-    padding: 10px 14px;
-  }
-
-  .offer-message {
-    max-width: 85%;
-  }
-
-  .offer-message-content {
-    font-size: 14px;
-    padding: 10px 14px;
-  }
-
-  .offer-price {
+  .request-card-text {
     font-size: 15px;
-  }
-
-  .offer-time {
-    font-size: 12px;
-  }
-
-  .bottom-actions {
-    padding: 12px 16px calc(12px + env(safe-area-inset-bottom)) 16px;
   }
 
   .action-button {
     padding: 14px 18px;
-    font-size: 20px;
-    min-height: 62px;
+    font-size: 18px;
+    min-height: 58px;
   }
 }
-
-/* Windowed mode adjustments */
-.windowed-mode .bottom-actions {
-  padding-bottom: 20px; /* Remove safe area inset in windowed mode */
-}
-

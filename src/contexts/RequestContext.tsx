@@ -8,6 +8,7 @@ interface Request {
   description: string
   created_at: string
   updated_at: string
+  distanceKm?: number | null
   offer?: Demand['offer']
 }
 
@@ -39,6 +40,7 @@ export const RequestProvider: React.FC<RequestProviderProps> = ({ children }) =>
     description: demand.translation || demand.transcription,
     created_at: demand.createdAt,
     updated_at: demand.updatedAt,
+    distanceKm: demand.distance ?? null,
     offer: demand.offer
   })
 

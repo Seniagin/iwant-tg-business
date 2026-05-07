@@ -2,12 +2,11 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { apiService } from '../../services/api'
 import './RequestsWithOffersPage.css'
 import { Demand } from '../../types'
+import { timeAgo } from '../../utils/time'
 
 interface Request {
   id: string
   title: string
-  description: string
-  status: 'pending' | 'in_progress' | 'completed' | 'cancelled'
   created_at: string
   updated_at: string
 }
@@ -33,8 +32,6 @@ const RequestsWithOffersPage: React.FC<RequestsWithOffersPageProps> = ({ onReque
       const transformedRequests: Request[] = demands.map((demand: Demand) => ({
         id: demand.id.toString(),
         title: demand.summarizedTranslation || demand.translation || demand.transcription,
-        description: demand.translation || demand.transcription,
-        status: 'pending' as const, // API doesn't provide status, defaulting to pending
         created_at: demand.createdAt,
         updated_at: demand.updatedAt
       }))
@@ -69,46 +66,6 @@ const RequestsWithOffersPage: React.FC<RequestsWithOffersPageProps> = ({ onReque
   useEffect(() => {
     loadRequests()
   }, [loadRequests])
-
-  const getStatusColor = (status: Request['status']) => {
-    switch (status) {
-      case 'pending':
-        return '#ffa500'
-      case 'in_progress':
-        return '#007bff'
-      case 'completed':
-        return '#28a745'
-      case 'cancelled':
-        return '#dc3545'
-      default:
-        return '#6c757d'
-    }
-  }
-
-  const getStatusText = (status: Request['status']) => {
-    switch (status) {
-      case 'pending':
-        return 'Pending'
-      case 'in_progress':
-        return 'In Progress'
-      case 'completed':
-        return 'Completed'
-      case 'cancelled':
-        return 'Cancelled'
-      default:
-        return 'Unknown'
-    }
-  }
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
 
   const handleRequestClick = (request: Request) => {
     onRequestClick(request.id)
@@ -156,23 +113,11 @@ const RequestsWithOffersPage: React.FC<RequestsWithOffersPageProps> = ({ onReque
             >
               <div className="request-header">
                 <h3 className="request-title">{request.title}</h3>
-                <span
-                  className="request-status"
-                  style={{ backgroundColor: getStatusColor(request.status) }}
-                >
-                  {getStatusText(request.status)}
-                </span>
               </div>
-              <p className="request-description">{request.description}</p>
               <div className="request-meta">
                 <span className="request-date">
-                  Created: {formatDate(request.created_at)}
+                  {timeAgo(request.created_at)}
                 </span>
-                {request.updated_at !== request.created_at && (
-                  <span className="request-updated">
-                    Updated: {formatDate(request.updated_at)}
-                  </span>
-                )}
               </div>
             </div>
           ))

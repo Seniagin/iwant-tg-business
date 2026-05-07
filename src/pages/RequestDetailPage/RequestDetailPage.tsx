@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { useRequest } from '../../contexts/RequestContext'
 import { useUser } from '../../contexts/UserContext'
 import { getCurrencySymbol } from '../../constants/currency-to-symbol-map'
@@ -8,6 +8,22 @@ import OfferForm, { OfferFormHandle } from './OfferForm/OfferForm'
 interface RequestDetailPageProps {
   requestId?: string
   onBack: () => void
+}
+
+function parseUtc(s: string): number {
+  const str = /Z$|[+-]\d{2}:?\d{2}$/.test(s) ? s : s + 'Z'
+  return new Date(str).getTime()
+}
+
+function timeAgo(dateString: string): string {
+  const seconds = Math.floor((Date.now() - parseUtc(dateString)) / 1000)
+  if (seconds < 60) return 'just now'
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  return `${days}d ago`
 }
 
 const RequestDetailPage: React.FC<RequestDetailPageProps> = ({ requestId, onBack }) => {
@@ -110,60 +126,56 @@ const RequestDetailPage: React.FC<RequestDetailPageProps> = ({ requestId, onBack
         </button>
       </div>
       <div className="request-detail-content">
-        <div className="chat-section">
-          <div className="request-info">
-            <div className="request-description">
-              <p>{currentRequest.description}</p>
-            </div>
-          </div>
 
-          {/* Offer Message (if exists) */}
-          {currentRequest.offer && (
-            <div className="offer-message-container">
-              <div className="offer-message">
-                <div className="offer-message-content">
-                  {currentRequest.offer.price && business?.currency && (
-                    <div className="offer-price">
-                      {getCurrencySymbol(business.currency)}{currentRequest.offer.price}
-                    </div>
-                  )}
-                  {currentRequest.offer.comment && (
-                    <p className="offer-comment">{currentRequest.offer.comment}</p>
-                  )}
-                  {currentRequest.offer.time && (
-                    <div className="offer-time">
-                      {currentRequest.offer.time === 'TODAY' && '⚡ Today'}
-                      {currentRequest.offer.time === 'THIS_WEEK' && '📅 This Week'}
-                      {currentRequest.offer.time === 'AFTER_THIS_WEEK' && '⏰ After This Week'}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
+        {/* Client request card */}
+        <div className="request-card">
+          <p className="request-card-text">{currentRequest.description}</p>
+          <div className="request-card-meta">
+            <span className="request-card-time">{timeAgo(currentRequest.created_at)}</span>
+            {currentRequest.distanceKm != null && (
+              <span className="request-card-distance">{currentRequest.distanceKm.toFixed(1)} km from you</span>
+            )}
+          </div>
         </div>
 
-        {/* Offer Form Section - only show if no offer exists */}
+        {/* Already submitted: show offer summary */}
+        {currentRequest.offer && (
+          <div className="offer-summary">
+            <p className="offer-summary-label">Your offer</p>
+            {currentRequest.offer.price && business?.currency && (
+              <div className="offer-summary-price">
+                {getCurrencySymbol(business.currency)}{currentRequest.offer.price}
+              </div>
+            )}
+            {currentRequest.offer.time && (
+              <div className="offer-summary-time">
+                {currentRequest.offer.time === 'TODAY' && '⚡ Today'}
+                {currentRequest.offer.time === 'THIS_WEEK' && '📅 This Week'}
+                {currentRequest.offer.time === 'AFTER_THIS_WEEK' && '⏳ After This Week'}
+              </div>
+            )}
+            {currentRequest.offer.comment && (
+              <p className="offer-summary-comment">{currentRequest.offer.comment}</p>
+            )}
+          </div>
+        )}
+
+        {/* Offer form + submit */}
         {!currentRequest.offer && (
-          <OfferForm
-            ref={offerFormRef}
-            error={error}
-          />
+          <>
+            <OfferForm ref={offerFormRef} error={error} />
+            <div className="bottom-actions">
+              <button
+                className="action-button primary"
+                onClick={handleSubmitOffer}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Submitting...' : 'Submit Offer'}
+              </button>
+            </div>
+          </>
         )}
       </div>
-
-      {/* Submit button - only show if no offer exists */}
-      {!currentRequest.offer && (
-        <div className="bottom-actions">
-          <button
-            className="action-button primary"
-            onClick={handleSubmitOffer}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Submitting...' : 'Submit Offer'}
-          </button>
-        </div>
-      )}
 
     </div>
   )
