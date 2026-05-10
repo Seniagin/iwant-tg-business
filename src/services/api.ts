@@ -198,4 +198,13 @@ export const apiService = {
       errorLabel: 'Update business location API',
     })
   },
+
+  async updateLanguage(languageCode: string): Promise<void> {
+    const response = await apiRequest('/business-client/language', {
+      method: 'PATCH',
+      body: { languageCode },
+      errorLabel: 'Update language API',
+    })
+    await ensureResponseOk(response, 'Update language API')
+  },
 }

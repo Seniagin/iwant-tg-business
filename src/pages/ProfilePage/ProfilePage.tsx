@@ -106,6 +106,12 @@ const TapRow: React.FC<TapRowProps> = ({ label, value, placeholder, onClick, isL
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────
+const LANGUAGES = [
+  { code: 'en', label: 'English 🇬🇧' },
+  { code: 'uk', label: 'Українська 🇺🇦' },
+  { code: 'ru', label: 'Русский 🇷🇺' },
+]
+
 type ModalField = 'name' | 'description' | 'email' | 'phone' | 'instagram' | 'website' | null
 
 interface ProfilePageProps {
@@ -193,6 +199,15 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onClose }) => {
       await refreshBusiness()
     } catch (e) {
       console.error('Failed to update contact', e)
+    }
+  }
+
+  const handleLanguageChange = async (code: string) => {
+    try {
+      await apiService.updateLanguage(code)
+      await refreshBusiness()
+    } catch (e) {
+      console.error('Failed to update language', e)
     }
   }
 
@@ -286,6 +301,19 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onClose }) => {
                     ? <option value="">Loading…</option>
                     : currencies.map((c) => <option key={c} value={c}>{c}</option>)
                   }
+                </select>
+              </div>
+              <div className="settings-divider" />
+              <div className="settings-row settings-row--select">
+                <span className="settings-row-label">Language</span>
+                <select
+                  className="currency-select"
+                  value={user?.telegramLanguageCode ?? 'en'}
+                  onChange={(e) => handleLanguageChange(e.target.value)}
+                >
+                  {LANGUAGES.map((l) => (
+                    <option key={l.code} value={l.code}>{l.label}</option>
+                  ))}
                 </select>
               </div>
             </div>
