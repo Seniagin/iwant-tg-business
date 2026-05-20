@@ -150,13 +150,15 @@ function AppContent() {
   return (
     <div className="App">
       <div className="app-shell">
-        <AppMainNav
-          activeTab={activeTab}
-          showTabs={!isRequestDetail}
-          onNavigateToTab={navigateToTab}
-          onOpenProfile={() => setProfileOpen(true)}
-          userInitials={userInitials}
-        />
+        {!isRequestDetail && (
+          <AppMainNav
+            activeTab={activeTab}
+            showTabs={true}
+            onNavigateToTab={navigateToTab}
+            onOpenProfile={() => setProfileOpen(true)}
+            userInitials={userInitials}
+          />
+        )}
         <main className="app-shell__main">
           {renderContent()}
         </main>

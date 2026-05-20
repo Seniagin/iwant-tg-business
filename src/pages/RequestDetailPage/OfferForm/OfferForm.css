@@ -2,9 +2,8 @@
 .offer-form-section {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   flex-shrink: 0;
-  padding: 0 20px;
 }
 
 .error-message {

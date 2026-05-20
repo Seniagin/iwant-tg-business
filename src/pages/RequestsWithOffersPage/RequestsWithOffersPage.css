@@ -177,6 +177,21 @@
   opacity: 0.55;
 }
 
+/* ── Lifetime bar ── */
+.request-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.request-lifetime-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 3px;
+  max-width: 100%;
+  transition: width 0.4s ease;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .requests-with-offers-page {

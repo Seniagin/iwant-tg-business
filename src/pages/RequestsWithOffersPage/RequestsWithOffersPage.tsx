@@ -4,9 +4,23 @@ import './RequestsWithOffersPage.css'
 import { Demand } from '../../types'
 import { timeAgo } from '../../utils/time'
 
+function parseUtc(s: string): number {
+  return new Date(/Z$|[+-]\d{2}:?\d{2}$/.test(s) ? s : s + 'Z').getTime()
+}
+
+const LIFETIME_MS = 3 * 24 * 60 * 60 * 1000
+
+function lifetimePct(activeTo: string | null | undefined): number | null {
+  if (!activeTo) return null
+  const msLeft = parseUtc(activeTo) - Date.now()
+  if (msLeft <= 0) return 0
+  return Math.min(100, (msLeft / LIFETIME_MS) * 100)
+}
+
 interface Request {
   id: string
   title: string
+  activeTo: string | null
   created_at: string
   updated_at: string
 }
@@ -32,6 +46,7 @@ const RequestsWithOffersPage: React.FC<RequestsWithOffersPageProps> = ({ onReque
       const transformedRequests: Request[] = demands.map((demand: Demand) => ({
         id: demand.id.toString(),
         title: demand.summarizedTranslation || demand.translation || demand.transcription,
+        activeTo: demand.activeTo ?? null,
         created_at: demand.createdAt,
         updated_at: demand.updatedAt
       }))
@@ -111,6 +126,19 @@ const RequestsWithOffersPage: React.FC<RequestsWithOffersPageProps> = ({ onReque
               className="request-card"
               onClick={() => handleRequestClick(request)}
             >
+              {(() => {
+                const pct = lifetimePct(request.activeTo)
+                if (pct === null) return null
+                return (
+                  <div
+                    className="request-lifetime-bar"
+                    style={{
+                      width: `${pct}%`,
+                      background: `hsl(${pct * 1.2}deg, 75%, 42%)`,
+                    }}
+                  />
+                )
+              })()}
               <div className="request-header">
                 <h3 className="request-title">{request.title}</h3>
               </div>

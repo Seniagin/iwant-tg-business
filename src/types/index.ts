@@ -29,6 +29,7 @@ export interface Demand {
   transcription: string
   translation: string
   summarizedTranslation: string
+  activeTo?: string | null
   createdAt: string
   updatedAt: string
   offer?: {
@@ -43,6 +44,10 @@ export interface Demand {
     updatedAt: string
     status: string
   }
+  clientContacts?: {
+    phone?: string | null
+    telegramUsername?: string | null
+  } | null
 }
 
 /**

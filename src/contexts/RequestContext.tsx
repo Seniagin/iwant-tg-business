@@ -10,6 +10,7 @@ interface Request {
   updated_at: string
   distanceKm?: number | null
   offer?: Demand['offer']
+  clientContacts?: Demand['clientContacts']
 }
 
 interface RequestContextType {
@@ -41,7 +42,8 @@ export const RequestProvider: React.FC<RequestProviderProps> = ({ children }) =>
     created_at: demand.createdAt,
     updated_at: demand.updatedAt,
     distanceKm: demand.distance ?? null,
-    offer: demand.offer
+    offer: demand.offer,
+    clientContacts: demand.clientContacts,
   })
 
 
