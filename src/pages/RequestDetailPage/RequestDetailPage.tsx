@@ -40,6 +40,7 @@ const RequestDetailPage: React.FC<RequestDetailPageProps> = ({ requestId, onBack
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showIgnoreSheet, setShowIgnoreSheet] = useState(false)
   const offerFormRef = useRef<OfferFormHandle>(null)
 
   useEffect(() => {
@@ -51,6 +52,20 @@ const RequestDetailPage: React.FC<RequestDetailPageProps> = ({ requestId, onBack
       setHasLoaded(true)
     }
   }, [requestId, loadRequest])
+
+  // Scroll focused input into view when the soft keyboard opens/resizes the viewport
+  useEffect(() => {
+    const viewport = window.visualViewport
+    if (!viewport) return
+    const handleResize = () => {
+      const el = document.activeElement as HTMLElement | null
+      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) {
+        setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 60)
+      }
+    }
+    viewport.addEventListener('resize', handleResize)
+    return () => viewport.removeEventListener('resize', handleResize)
+  }, [])
 
   const handleSubmitOffer = async () => {
     if (!currentRequest?.id || !offerFormRef.current) return
@@ -69,10 +84,11 @@ const RequestDetailPage: React.FC<RequestDetailPageProps> = ({ requestId, onBack
     }
   }
 
-  const handleIgnore = async () => {
+  const handleIgnoreWithReason = async (reason: string) => {
     if (!currentRequest?.id) return
+    setShowIgnoreSheet(false)
     try {
-      await ignoreRequest(currentRequest.id)
+      await ignoreRequest(currentRequest.id, reason)
       onBack()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to ignore request')
@@ -115,7 +131,7 @@ const RequestDetailPage: React.FC<RequestDetailPageProps> = ({ requestId, onBack
         <span className="rdp__header-title" title={currentRequest.title}>
           {currentRequest.title}
         </span>
-        <button className="rdp__ignore" onClick={handleIgnore} title="Ignore request">
+        <button className="rdp__ignore" onClick={() => setShowIgnoreSheet(true)} title="Ignore request">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
             <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
@@ -204,31 +220,74 @@ const RequestDetailPage: React.FC<RequestDetailPageProps> = ({ requestId, onBack
         )}
 
         {/* Offer form */}
-        {showForm && (
-          <div className="rdp__section-label">{isEditing ? 'Edit your offer' : 'Make an offer'}</div>
+        {showForm && isEditing && (
+          <div className="rdp__section-label">Edit your offer</div>
+        )}
+        {showForm && !isEditing && (
+          <div className="rdp__section-label">Your offer</div>
         )}
         {showForm && (
-          <OfferForm ref={offerFormRef} error={error} />
+          <div className="rdp__form-card">
+            <OfferForm ref={offerFormRef} error={error} />
+          </div>
         )}
       </div>
+
+      {/* ── Ignore reason sheet ── */}
+      {showIgnoreSheet && (
+        <div className="rdp__sheet-backdrop" onClick={() => setShowIgnoreSheet(false)}>
+          <div className="rdp__sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="rdp__sheet-handle" />
+            <p className="rdp__sheet-title">Why are you skipping this request?</p>
+            <button
+              className="rdp__sheet-option"
+              onClick={() => handleIgnoreWithReason('NOT_RELEVANT')}
+            >
+              <span className="rdp__sheet-option-icon">🚫</span>
+              <span className="rdp__sheet-option-text">
+                <strong>Not relevant to my business</strong>
+                <span>This type of work doesn't match what I do</span>
+              </span>
+            </button>
+            <button
+              className="rdp__sheet-option"
+              onClick={() => handleIgnoreWithReason('NOT_AVAILABLE')}
+            >
+              <span className="rdp__sheet-option-icon">📅</span>
+              <span className="rdp__sheet-option-text">
+                <strong>Not available right now</strong>
+                <span>I'm busy or don't have capacity at the moment</span>
+              </span>
+            </button>
+            <button className="rdp__sheet-cancel" onClick={() => setShowIgnoreSheet(false)}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── Sticky bottom action ── */}
       <div className="rdp__footer">
         {showForm ? (
-          <div className="rdp__footer-row">
-            {isEditing && (
-              <button className="rdp__btn rdp__btn--secondary" onClick={() => { setIsEditing(false); setError(null) }}>
-                Cancel
+          <>
+            <div className="rdp__footer-row">
+              {isEditing && (
+                <button className="rdp__btn rdp__btn--secondary" onClick={() => { setIsEditing(false); setError(null) }}>
+                  Cancel
+                </button>
+              )}
+              <button
+                className="rdp__btn rdp__btn--primary"
+                onClick={handleSubmitOffer}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Submitting…' : isEditing ? 'Update offer' : 'Submit offer'}
               </button>
+            </div>
+            {!isEditing && (
+              <p className="rdp__footer-hint">Client will be notified instantly</p>
             )}
-            <button
-              className="rdp__btn rdp__btn--primary"
-              onClick={handleSubmitOffer}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Submitting…' : isEditing ? 'Update offer' : 'Submit offer'}
-            </button>
-          </div>
+          </>
         ) : isPending ? (
           <button className="rdp__btn rdp__btn--secondary" onClick={() => setIsEditing(true)}>
             ✏️ Edit offer

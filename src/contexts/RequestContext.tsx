@@ -21,7 +21,7 @@ interface RequestContextType {
   // Actions
   loadRequest: (id: string) => Promise<void>
   makeOffer: (data: { demandId: number; price?: number; time?: string; comment?: string }) => Promise<void>
-  ignoreRequest: (requestId: string) => Promise<void>
+  ignoreRequest: (requestId: string, reason?: string | null) => Promise<void>
 }
 
 const RequestContext = createContext<RequestContextType | undefined>(undefined)
@@ -87,12 +87,12 @@ export const RequestProvider: React.FC<RequestProviderProps> = ({ children }) =>
     }
   }, [])
 
-  const ignoreRequest = useCallback(async (requestId: string): Promise<void> => {
+  const ignoreRequest = useCallback(async (requestId: string, reason?: string | null): Promise<void> => {
     try {
-      console.log('🚫 Ignoring request:', requestId)
-      
-      await apiService.ignoreDemand(parseInt(requestId))
-      
+      console.log('🚫 Ignoring request:', requestId, reason)
+
+      await apiService.ignoreDemand(parseInt(requestId), reason)
+
       console.log('✅ Request ignored:', requestId)
     } catch (err) {
       console.error('❌ Error ignoring request:', err)

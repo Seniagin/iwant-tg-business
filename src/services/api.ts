@@ -174,10 +174,10 @@ export const apiService = {
     })
   },
 
-  async ignoreDemand(id: number): Promise<any> {
+  async ignoreDemand(id: number, reason?: string | null): Promise<any> {
     return apiJsonOrEmpty('/business-client/business/demand/ignore', {
       method: 'POST',
-      body: { demandId: id },
+      body: { demandId: id, reason: reason ?? null },
       errorLabel: 'Ignore demand API',
     })
   },

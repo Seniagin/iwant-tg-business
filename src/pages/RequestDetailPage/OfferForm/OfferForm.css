@@ -1,190 +1,143 @@
-/* Offer Form Section */
-.offer-form-section {
+.offer-form {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  flex-shrink: 0;
+  gap: 20px;
 }
 
-.error-message {
-  background: #ffebee;
-  color: #c62828;
-  padding: 12px 16px;
-  border-radius: 8px;
-  margin-bottom: 16px;
-  border: 1px solid #ffcdd2;
+/* ── Error ── */
+.offer-form__error {
+  background: rgba(220, 53, 69, 0.12);
+  color: #dc3545;
+  border-radius: 10px;
+  padding: 10px 14px;
   font-size: 14px;
 }
 
+/* ── Field wrapper ── */
+.offer-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
-.form-label {
-  display: block;
-  font-size: 14px;
+/* ── Label ── */
+.offer-form__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tg-theme-text-color, #111);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: 0.01em;
+}
+
+.offer-form__optional {
+  font-size: 11px;
   font-weight: 500;
-  color: var(--tg-theme-text-color, #333333);
-  margin-bottom: 8px;
+  color: var(--tg-theme-hint-color, #aaa);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-/* Price Input Section */
-.price-input-container {
+/* ── Price ── */
+.offer-form__price-wrap {
   position: relative;
   display: flex;
   align-items: center;
 }
 
-.price-input {
+.offer-form__price-input {
   width: 100%;
-  padding: 12px 60px 12px 16px;
-  border: 2px solid var(--tg-theme-section-separator-color, #e9ecef);
-  border-radius: 8px;
+  padding: 11px 40px 11px 14px;
+  border: 1.5px solid rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+  color: var(--tg-theme-text-color, #111);
   font-size: 16px;
-  background: var(--tg-theme-bg-color, #ffffff);
-  color: var(--tg-theme-text-color, #000000);
-  transition: border-color 0.2s ease;
-  box-sizing: border-box;
-}
-
-.price-input:focus {
+  font-weight: 500;
   outline: none;
-  border-color: #2196f3;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
 }
 
-.price-input::placeholder {
-  color: var(--tg-theme-hint-color, #999999);
+.offer-form__price-input:focus {
+  border-color: var(--tg-theme-button-color, #2196f3);
 }
 
-.price-currency {
-  position: absolute;
-  right: 16px;
-  font-size: 24px;
-  color: var(--tg-theme-hint-color, #999999);
-  pointer-events: none;
+.offer-form__price-input::placeholder {
+  color: var(--tg-theme-hint-color, #bbb);
   font-weight: 400;
+}
+
+.offer-form__currency {
+  position: absolute;
+  right: 13px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--tg-theme-hint-color, #aaa);
+  pointer-events: none;
+}
+
+/* ── Segmented control ── */
+.offer-form__segment {
+  display: flex;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.offer-form__seg-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 9px 6px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--tg-theme-hint-color, #888);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+}
+
+.offer-form__seg-btn--active {
+  background: var(--tg-theme-button-color, #2196f3);
+  color: var(--tg-theme-button-text-color, #fff);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+}
+
+.offer-form__seg-icon {
+  font-size: 15px;
   line-height: 1;
 }
 
-/* Time Selection Section */
-.time-options {
-  display: flex;
-  gap: 12px;
-  margin-top: 8px;
-}
-
-.time-option {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 16px 12px;
-  border: 2px solid var(--tg-theme-hint-color, #888888);
-  border-radius: 12px;
-  background: var(--tg-theme-secondary-bg-color, #f0f0f0);
-  color: var(--tg-theme-text-color, #000000);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  min-height: 80px;
-  justify-content: center;
-}
-
-.time-option:hover {
-  border-color: #2196f3;
-  transform: translateY(-1px);
-}
-
-.time-option.selected {
-  background: linear-gradient(135deg, #2196f3, #1976d2);
-  border-color: #2196f3;
-  color: white;
-}
-
-.time-icon {
-  font-size: 20px;
-  margin-bottom: 8px;
-}
-
-.time-label {
-  font-size: 12px;
-  font-weight: 600;
-  text-align: center;
-}
-
-/* Comment Section */
-.comment-textarea {
+/* ── Textarea ── */
+.offer-form__textarea {
   width: 100%;
-  padding: 12px 16px;
-  border: 2px solid var(--tg-theme-section-separator-color, #e9ecef);
-  border-radius: 8px;
+  padding: 11px 14px;
+  border: 1.5px solid rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+  color: var(--tg-theme-text-color, #111);
   font-size: 16px;
   font-family: inherit;
-  background: var(--tg-theme-bg-color, #ffffff);
-  color: var(--tg-theme-text-color, #000000);
   resize: none;
-  min-height: 56px;
-  transition: border-color 0.2s ease;
-  box-sizing: border-box;
-}
-
-.comment-textarea:focus {
   outline: none;
-  border-color: #2196f3;
+  box-sizing: border-box;
+  line-height: 1.5;
+  transition: border-color 0.15s;
 }
 
-.comment-textarea::placeholder {
-  color: var(--tg-theme-hint-color, #999999);
+.offer-form__textarea:focus {
+  border-color: var(--tg-theme-button-color, #2196f3);
 }
 
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .offer-form-section {
-    margin-top: 16px;
-    gap: 12px;
-  }
-
-  .error-message {
-    padding: 10px 12px;
-    margin-bottom: 12px;
-    font-size: 13px;
-  }
-
-  .form-label {
-    margin-bottom: 6px;
-    font-size: 13px;
-  }
-
-  .price-input {
-    padding: 10px 50px 10px 14px;
-    font-size: 16px; /* Prevent iOS zoom on focus */
-  }
-
-  .price-currency {
-    right: 14px;
-    font-size: 22px;
-  }
-
-  .comment-textarea {
-    padding: 10px 14px;
-    min-height: 56px;
-    font-size: 16px; /* Prevent iOS zoom on focus */
-  }
-
-  .time-options {
-    gap: 8px;
-    margin-top: 6px;
-  }
-
-  .time-option {
-    padding: 12px 8px;
-    min-height: 70px;
-  }
-
-  .time-icon {
-    font-size: 18px;
-    margin-bottom: 6px;
-  }
-
-  .time-label {
-    font-size: 11px;
-  }
+.offer-form__textarea::placeholder {
+  color: var(--tg-theme-hint-color, #bbb);
 }
-

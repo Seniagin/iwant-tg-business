@@ -17,84 +17,93 @@ interface OfferFormProps {
   error?: string | null
 }
 
+const TIME_OPTIONS = [
+  { value: 'TODAY'           as const, label: 'Today',     icon: '⚡' },
+  { value: 'THIS_WEEK'       as const, label: 'This week',  icon: '📅' },
+  { value: 'AFTER_THIS_WEEK' as const, label: 'Later',      icon: '🗓' },
+]
+
+// Nudge a focused field into view after the keyboard has fully opened
+function scrollFieldIntoView(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
+  const el = e.currentTarget
+  setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 320)
+}
+
 const OfferForm = forwardRef<OfferFormHandle, OfferFormProps>(({ error }, ref) => {
   const { business } = useUser()
-  const [price, setPrice] = useState('')
+  const [price, setPrice]           = useState('')
   const [selectedTime, setSelectedTime] = useState<'TODAY' | 'THIS_WEEK' | 'AFTER_THIS_WEEK'>('THIS_WEEK')
-  const [comment, setComment] = useState('')
-
-  const timeOptions = [
-    { value: 'TODAY' as const, label: 'Today', icon: '⚡' },
-    { value: 'THIS_WEEK' as const, label: 'This Week', icon: '🗓️' },
-    { value: 'AFTER_THIS_WEEK' as const, label: 'Later', icon: '⏳' }
-  ]
+  const [comment, setComment]       = useState('')
 
   useImperativeHandle(ref, () => ({
     getFormData: () => {
-      // Validate price if provided
-      if (price.trim() && isNaN(parseFloat(price.trim()))) {
-        return null
-      }
-
+      if (price.trim() && isNaN(parseFloat(price.trim()))) return null
       return {
-        price: price.trim() ? parseFloat(price.trim()) : undefined,
-        time: selectedTime,
-        comment: comment.trim() || undefined
+        price:   price.trim() ? parseFloat(price.trim()) : undefined,
+        time:    selectedTime,
+        comment: comment.trim() || undefined,
       }
-    }
+    },
   }))
 
-  return (
-    <div className="offer-form-section">
-      {/* Error Display */}
-      {error && (
-        <div className="error-message">
-          {error}
-        </div>
-      )}
+  const currencySymbol = business?.currency ? getCurrencySymbol(business.currency) : ''
 
-      {/* Price Section */}
-      <div className="form-section">
-        <div className="price-input-container">
+  return (
+    <div className="offer-form">
+      {error && <div className="offer-form__error">{error}</div>}
+
+      {/* ── Price ── */}
+      <div className="offer-form__field">
+        <div className="offer-form__label">
+          Price
+          <span className="offer-form__optional">optional</span>
+        </div>
+        <div className="offer-form__price-wrap">
           <input
             type="text"
             inputMode="decimal"
-            className="price-input"
-            placeholder="Suggest your price"
+            className="offer-form__price-input"
+            placeholder="e.g. 25"
             value={price}
             onChange={(e) => setPrice(e.target.value)}
+            onFocus={scrollFieldIntoView}
           />
-          {business?.currency && (
-            <span className="price-currency">
-              {getCurrencySymbol(business.currency)}
-            </span>
+          {currencySymbol && (
+            <span className="offer-form__currency">{currencySymbol}</span>
           )}
         </div>
       </div>
 
-      {/* Time Selection Section */}
-      <div className="form-section">
-        <div className="time-options">
-          {timeOptions.map((option) => (
+      {/* ── Timing ── */}
+      <div className="offer-form__field">
+        <div className="offer-form__label">When can you do it?</div>
+        <div className="offer-form__segment">
+          {TIME_OPTIONS.map((opt) => (
             <button
-              key={option.value}
-              className={`time-option ${selectedTime === option.value ? 'selected' : ''}`}
-              onClick={() => setSelectedTime(option.value)}
+              key={opt.value}
+              className={`offer-form__seg-btn${selectedTime === opt.value ? ' offer-form__seg-btn--active' : ''}`}
+              onClick={() => setSelectedTime(opt.value)}
+              type="button"
             >
-              <span className="time-icon">{option.icon}</span>
-              <span className="time-label">{option.label}</span>
+              <span className="offer-form__seg-icon">{opt.icon}</span>
+              <span>{opt.label}</span>
             </button>
           ))}
         </div>
       </div>
 
-      {/* Comment Section */}
-      <div className="form-section">
+      {/* ── Comment ── */}
+      <div className="offer-form__field">
+        <div className="offer-form__label">
+          Comment
+          <span className="offer-form__optional">optional</span>
+        </div>
         <textarea
-          className="comment-textarea"
-          placeholder="Leave a comment"
+          className="offer-form__textarea"
+          placeholder="e.g. Available Mon–Fri after 3 pm, price may vary depending on hair length"
           value={comment}
           onChange={(e) => setComment(e.target.value)}
+          onFocus={scrollFieldIntoView}
           rows={2}
         />
       </div>
@@ -103,6 +112,4 @@ const OfferForm = forwardRef<OfferFormHandle, OfferFormProps>(({ error }, ref) =
 })
 
 OfferForm.displayName = 'OfferForm'
-
 export default OfferForm
-
